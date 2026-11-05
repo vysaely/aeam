@@ -1,0 +1,95 @@
+diff --git a/src/legacy/legacy_runtime.cc b/src/legacy/legacy_runtime.cc
+--- a/src/legacy/legacy_runtime.cc
++++ b/src/legacy/legacy_runtime.cc
+@@ -1956,13 +1956,56 @@
+   return 0;
+ }
+ 
+-// True when a "mov eax, [rip + disp32]" of the flag value precedes the clamp.
+-bool ClampReadsValue(const unsigned char* clamp, uintptr_t value) {
+-  for (std::size_t back = 6; back <= 40; ++back) {
+-    const unsigned char* load = clamp - back;
+-    if (load[0] == 0x8b && load[1] == 0x05 &&
+-        reinterpret_cast<uintptr_t>(load) + 6 + ReadDisplacement(load + 2) ==
+-            value) {
++// The register a "mov r32, [rip + disp32]" (optional REX without W) at `at`
++// loads the flag value into, or -1.
++int LoadedRegister(const unsigned char* at, uintptr_t value) {
++  int rex = 0;
++  if (at[0] >= 0x40 && at[0] <= 0x47) {
++    rex = at[0];
++    ++at;
++  }
++  if (at[0] != 0x8b || (at[1] & 0xc7) != 0x05 ||
++      reinterpret_cast<uintptr_t>(at) + 6 + ReadDisplacement(at + 2) != value) {
++    return -1;
++  }
++  return ((at[1] >> 3) & 7) | ((rex & 4) << 1);
++}
++
++// AEAM: a 240 clamp of the flag value. "mov r32, 240" then "cmp" of that
++// register with another (optional REX), then a cmov; the other register was
++// loaded from the flag within 160 bytes before. Roblox 2.742 moved one clamp
++// to r12d with the load ~80 bytes earlier ("mov eax, 240; cmp r12d, eax;
++// cmovae r12d, eax"), which the fixed ecx/eax pattern missed.
++bool IsFlagClamp(const unsigned char* clamp, uintptr_t value) {
++  if (clamp[0] < 0xb8 || clamp[0] > 0xbf || clamp[1] != 0xf0 ||
++      clamp[2] != 0 || clamp[3] != 0 || clamp[4] != 0) {
++    return false;
++  }
++  const int imm = clamp[0] - 0xb8;
++  const unsigned char* p = clamp + 5;
++  int rex = 0;
++  if (*p == 0x41 || *p == 0x44 || *p == 0x45) {
++    rex = *p++;
++  }
++  if (p[0] != 0x39 || (p[1] >> 6) != 3) {
++    return false;
++  }
++  const int reg = ((p[1] >> 3) & 7) | ((rex & 4) << 1);
++  const int rm = (p[1] & 7) | ((rex & 1) << 3);
++  if (imm != reg && imm != rm) {
++    return false;
++  }
++  const int other = imm == reg ? rm : reg;
++  const unsigned char* q = p + 2;
++  if (*q == 0x41 || *q == 0x44 || *q == 0x45) {
++    ++q;
++  }
++  if (q[0] != 0x0f || !(q[1] == 0x4c || q[1] == 0x43 || q[1] == 0x4f ||
++                        q[1] == 0x42 || q[1] == 0x4e || q[1] == 0x46)) {
++    return false;
++  }
++  for (std::size_t back = 6; back <= 160; ++back) {
++    if (LoadedRegister(clamp - back, value) == other) {
+       return true;
+     }
+   }
+@@ -1983,9 +2026,6 @@
+               << std::flush;
+     return;
+   }
+-  // mov ecx, 240; cmp eax, ecx; then cmovl ecx, eax or cmovae eax, ecx.
+-  static constexpr unsigned char kClamp[] = {0xb9, 0xf0, 0x00, 0x00,
+-                                             0x00, 0x39, 0xc8};
+   constexpr uint32_t kRaisedLimit = 10000;
+   const long page_size_value = sysconf(_SC_PAGESIZE);
+   const uintptr_t page_size =
+@@ -1995,14 +2035,10 @@
+     if (!mapping.executable || mapping.length < 64) {
+       continue;
+     }
+-    for (std::size_t i = 40; i + 10 <= mapping.length; ++i) {
++    for (std::size_t i = 160; i + 16 <= mapping.length; ++i) {
+       unsigned char* const clamp = mapping.begin + i;
+-      if (clamp[0] != 0xb9 ||
+-          std::memcmp(clamp, kClamp, sizeof(kClamp)) != 0 ||
+-          clamp[7] != 0x0f ||
+-          !((clamp[8] == 0x4c && clamp[9] == 0xc8) ||
+-            (clamp[8] == 0x43 && clamp[9] == 0xc1)) ||
+-          !ClampReadsValue(clamp, value)) {
++      if ((clamp[0] & 0xf8) != 0xb8 || clamp[1] != 0xf0 ||
++          !IsFlagClamp(clamp, value)) {
+         continue;
+       }
+       const uintptr_t page = reinterpret_cast<uintptr_t>(clamp) &
