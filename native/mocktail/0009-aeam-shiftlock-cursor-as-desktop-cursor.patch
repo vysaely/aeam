@@ -1,0 +1,161 @@
+diff --git a/src/window/window.cc b/src/window/window.cc
+--- a/src/window/window.cc
++++ b/src/window/window.cc
+@@ -966,6 +966,10 @@
+     const bool image_ok =
+         g_pointer_capture_backend->SetCursorImage(arrow.c_str(), 32, 32);
+     g_pointer_capture_owner->SetHostCursorEnabled(true);
++    if (g_pointer_capture_backend->SetLockCursorImage(
++            GetEnvNonEmpty("MOCKTAIL_SHIFTLOCK_CURSOR"))) {
++      g_pointer_capture_owner->SetLockCursorAvailable(true);
++    }
+     // SDL hides the cursor in relative mode unless told otherwise; the
+     // capture owner decides visibility itself (RMB drag keeps it shown).
+     SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_CURSOR_VISIBLE, "1");
+diff --git a/src/window/window_pointer_capture_owner.cc b/src/window/window_pointer_capture_owner.cc
+--- a/src/window/window_pointer_capture_owner.cc
++++ b/src/window/window_pointer_capture_owner.cc
+@@ -109,9 +109,18 @@
+   // on screen, held where it was (owner request 2026-11-06); Shift Lock and
+   // other native locks still hide it.
+   const bool right_drag_only = capture_requested && !native_capture_active;
++  // AEAM: Roblox 2.742 downloads its shift-lock icon instead of reading the
++  // file 0003 replaces, so the custom icon is shown as the desktop cursor,
++  // centred, while Shift Lock holds the pointer.
++  const bool lock_cursor = host_cursor_enabled_ && lock_cursor_available_ &&
++                           native_capture_active;
++  if (lock_cursor != lock_cursor_shown_ && backend_ != nullptr) {
++    backend_->UseLockCursor(lock_cursor);
++    lock_cursor_shown_ = lock_cursor;
++  }
+   const bool cursor_visible =
+       ((!client_active || host_cursor_enabled_) && !capture_requested) ||
+-      (host_cursor_enabled_ && right_drag_only);
++      (host_cursor_enabled_ && right_drag_only) || lock_cursor;
+   return Apply(capture_requested, cursor_visible);
+ }
+ 
+@@ -214,6 +223,7 @@
+     SDL_WarpMouseInWindow(window, capture_anchor_x_, capture_anchor_y_);
+     SDL_SetWindowMouseGrab(window, false);
+   }
++  const bool entering = relative_mode && !relative_mode_;
+   if (relative_mode != relative_mode_ &&
+       !SDL_SetWindowRelativeMouseMode(window, relative_mode)) {
+     if (relative_mode) {
+@@ -226,6 +236,9 @@
+   if (!relative_mode_) {
+     capture_anchor_valid_ = false;
+   }
++  if (entering && use_lock_cursor_) {
++    WarpToCentre();
++  }
+   return cursor_visible ? SDL_ShowCursor() : SDL_HideCursor();
+ }
+ 
+@@ -233,6 +246,57 @@
+   if (cursor_ != nullptr) {
+     SDL_DestroyCursor(static_cast<SDL_Cursor*>(cursor_));
+   }
++  if (lock_cursor_ != nullptr) {
++    SDL_DestroyCursor(static_cast<SDL_Cursor*>(lock_cursor_));
++  }
++}
++
++void SdlPointerCaptureBackend::WarpToCentre() {
++  auto* window = static_cast<SDL_Window*>(window_);
++  int w = 0;
++  int h = 0;
++  if (window != nullptr && SDL_GetWindowSize(window, &w, &h)) {
++    // in relative mode on Wayland this moves the locked pointer's hint, which
++    // is where the compositor draws it
++    SDL_WarpMouseInWindow(window, w / 2.0f, h / 2.0f);
++  }
++}
++
++bool SdlPointerCaptureBackend::SetLockCursorImage(const char* png_path) {
++  if (png_path == nullptr || png_path[0] == '\0') {
++    return false;
++  }
++  SDL_Surface* surface = SDL_LoadPNG(png_path);
++  if (surface == nullptr) {
++    std::fprintf(stderr, "  [input] shift-lock cursor %s unavailable: %s\n",
++                 png_path, SDL_GetError());
++    return false;
++  }
++  SDL_Cursor* cursor =
++      SDL_CreateColorCursor(surface, surface->w / 2, surface->h / 2);
++  SDL_DestroySurface(surface);
++  if (cursor == nullptr) {
++    return false;
++  }
++  if (lock_cursor_ != nullptr) {
++    SDL_DestroyCursor(static_cast<SDL_Cursor*>(lock_cursor_));
++  }
++  lock_cursor_ = cursor;
++  return true;
++}
++
++void SdlPointerCaptureBackend::UseLockCursor(bool on) {
++  if (on == use_lock_cursor_ || lock_cursor_ == nullptr) {
++    return;
++  }
++  use_lock_cursor_ = on;
++  SDL_Cursor* arrow = cursor_ != nullptr ? static_cast<SDL_Cursor*>(cursor_)
++                                         : SDL_GetDefaultCursor();
++  SDL_SetCursor(on ? static_cast<SDL_Cursor*>(lock_cursor_) : arrow);
++  if (on && relative_mode_) {
++    WarpToCentre();
++  }
++  std::fprintf(stderr, "  [input] shift-lock cursor %s\n", on ? "shown" : "hidden");
+ }
+ 
+ bool SdlPointerCaptureBackend::SetCursorImage(const char* png_path, int hot_x,
+diff --git a/src/window/window_pointer_capture_owner.h b/src/window/window_pointer_capture_owner.h
+--- a/src/window/window_pointer_capture_owner.h
++++ b/src/window/window_pointer_capture_owner.h
+@@ -14,6 +14,9 @@
+  public:
+   virtual ~PointerCaptureBackend() = default;
+   virtual bool Apply(bool relative_mode, bool cursor_visible) = 0;
++  // AEAM: show the shift-lock image as the cursor, centred, while a native
++  // mouse lock (Shift Lock) holds the pointer; the arrow otherwise.
++  virtual void UseLockCursor(bool /*on*/) {}
+ };
+ 
+ class WindowPointerCaptureOwner final {
+@@ -50,6 +53,8 @@
+   // pointer is not captured. The backend must have replaced Roblox's arrow
+   // textures, otherwise both cursors are drawn.
+   void SetHostCursorEnabled(bool enabled) { host_cursor_enabled_ = enabled; }
++  // AEAM: the backend holds a shift-lock cursor image (MOCKTAIL_SHIFTLOCK_CURSOR).
++  void SetLockCursorAvailable(bool available) { lock_cursor_available_ = available; }
+   bool host_cursor_enabled() const { return host_cursor_enabled_; }
+ 
+   bool captured() const { return captured_; }
+@@ -57,6 +62,8 @@
+ 
+  private:
+   bool Apply(bool capture, bool cursor_visible);
++  bool lock_cursor_available_ = false;
++  bool lock_cursor_shown_ = false;
+ 
+   PointerCaptureBackend* backend_ = nullptr;
+   std::mutex mutex_;
+@@ -87,10 +94,16 @@
+   // Installs a color cursor from a PNG with the given hotspot. Returns false
+   // and leaves the default cursor when the image cannot be loaded.
+   bool SetCursorImage(const char* png_path, int hot_x, int hot_y);
++  // AEAM: the shift-lock cursor, hotspot at the image centre.
++  bool SetLockCursorImage(const char* png_path);
++  void UseLockCursor(bool on) override;
+ 
+  private:
+   void* window_ = nullptr;
+   void* cursor_ = nullptr;
++  void* lock_cursor_ = nullptr;
++  bool use_lock_cursor_ = false;
++  void WarpToCentre();
+   float capture_anchor_x_ = 0.0f;
+   float capture_anchor_y_ = 0.0f;
+   bool relative_mode_ = false;
