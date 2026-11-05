@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index a3019d7..ccc7e12 100644
+index dd0d7ff..55b9497 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -268,6 +268,7 @@ add_library(mocktail_runtime STATIC
+@@ -270,6 +270,7 @@ add_library(mocktail_runtime STATIC
    src/runtime/crash_report_policy.cc
    src/runtime/discord_rpc.cc
    src/runtime/device_memory_profile.cc
@@ -485,10 +485,10 @@ index 0000000..5b9bbc6
 +}  // namespace runtime
 +}  // namespace mocktail
 diff --git a/src/runtime/roblox_experience_composition.cc b/src/runtime/roblox_experience_composition.cc
-index c6f7746..f94a34a 100644
+index 59fcbd3..96fde5f 100644
 --- a/src/runtime/roblox_experience_composition.cc
 +++ b/src/runtime/roblox_experience_composition.cc
-@@ -21,7 +21,9 @@ namespace {
+@@ -22,7 +22,9 @@ namespace {
  constexpr size_t kMaxPendingLaunchRequests = 8;
  // libroblox's static TLS requires the proven 16 MiB guest-thread stack floor.
  constexpr size_t kLaunchWorkerStackSize = 64ULL * 1024 * 1024;
@@ -499,7 +499,7 @@ index c6f7746..f94a34a 100644
  constexpr char kRobloxBaseUrl[] = "https://www.roblox.com/";
  
  Status Invalid(std::string message) {
-@@ -163,24 +165,32 @@ Status LaunchRobloxWebSurface(
+@@ -164,24 +166,32 @@ Status LaunchRobloxWebSurface(
    }
    std::fprintf(stderr, "  [%s] opening validated Roblox web surface\n",
                 transport);
@@ -552,10 +552,10 @@ index 00220db..1507a87 100644
      return true;
    }
 diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
-index 794998b..1309c8c 100644
+index 1fc2b99..1f80cd2 100644
 --- a/tests/CMakeLists.txt
 +++ b/tests/CMakeLists.txt
-@@ -477,6 +477,13 @@ target_link_libraries(vulkan_present_observer_test PRIVATE
+@@ -502,6 +502,13 @@ target_link_libraries(vulkan_present_observer_test PRIVATE
  )
  mocktail_apply_compile_options(vulkan_present_observer_test)
  
@@ -569,7 +569,7 @@ index 794998b..1309c8c 100644
  add_executable(input_pump_pacer_test
    input_pump_pacer_test.cc
  )
-@@ -983,6 +990,7 @@ gtest_discover_tests(jnivm_experience_lifecycle_test)
+@@ -1014,6 +1021,7 @@ gtest_discover_tests(jnivm_experience_lifecycle_test)
  gtest_discover_tests(jnivm_native_text_box_info_test)
  gtest_discover_tests(jnivm_webrtc_audio_manager_test)
  gtest_discover_tests(vulkan_present_observer_test)
@@ -611,11 +611,11 @@ index 0000000..d48d345
 +}  // namespace runtime
 +}  // namespace mocktail
 diff --git a/tests/vulkan_etc2_emulation_test.cc b/tests/vulkan_etc2_emulation_test.cc
-index 34fa398..aa4a5df 100644
+index 3cf4883..a0e79c1 100644
 --- a/tests/vulkan_etc2_emulation_test.cc
 +++ b/tests/vulkan_etc2_emulation_test.cc
-@@ -330,6 +330,37 @@ TEST_P(VulkanEtc2Test, UpscalingStillProducesTheSamePixels) {
-   EXPECT_EQ(Output(command), expected);
+@@ -424,6 +424,37 @@ TEST_P(VulkanEtc2Test, DefaultPreservesStreamedMipChain) {
+   }
  }
  
 +// Enough upscaled texels in one submit to emit on the worker pool; every

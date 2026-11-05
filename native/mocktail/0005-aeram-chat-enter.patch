@@ -18,6 +18,28 @@ index 1b0eb8f..d8f80f0 100644
        return Result(text_result.dispatched
                          ? RobloxInputDispatchState::kDispatched
                          : RobloxInputDispatchState::kStateUpdated,
+diff --git a/tests/roblox_input_native_adapter_test.cc b/tests/roblox_input_native_adapter_test.cc
+index d9846c3..9a1e819 100644
+--- a/tests/roblox_input_native_adapter_test.cc
++++ b/tests/roblox_input_native_adapter_test.cc
+@@ -396,7 +396,8 @@ TEST_F(RobloxInputNativeAdapterTest, RoutesUnicodeTextAndEnterInApkOrder) {
+                       true, false, SDL_SCANCODE_RETURN, SDLK_RETURN, 0}))
+                   .dispatched());
+ 
+-  ASSERT_EQ(probe_.calls.size(), 5u);
++  // AERAM: the submitting Enter also reaches the game as a key press.
++  ASSERT_EQ(probe_.calls.size(), 6u);
+   EXPECT_EQ(probe_.calls[0].name, "sync-text");
+   EXPECT_EQ(probe_.calls[0].text, u"🙂é");
+   EXPECT_EQ(probe_.calls[0].arguments[0], 3);
+@@ -406,6 +407,7 @@ TEST_F(RobloxInputNativeAdapterTest, RoutesUnicodeTextAndEnterInApkOrder) {
+   EXPECT_EQ(probe_.calls[3].name, "return");
+   EXPECT_EQ(probe_.calls[4].name, "pass-text");
+   EXPECT_EQ(probe_.calls[4].arguments, (std::vector<double>{55, JNI_TRUE, 3}));
++  EXPECT_EQ(probe_.calls[5].name, "key");
+ }
+ 
+ TEST_F(RobloxInputNativeAdapterTest,
 diff --git a/tests/roblox_input_router_test.cc b/tests/roblox_input_router_test.cc
 index 8e33684..c736080 100644
 --- a/tests/roblox_input_router_test.cc
