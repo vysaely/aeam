@@ -96,7 +96,9 @@ echo ""
 
 # 0. AERAM was renamed AEAM on 2026-11-06: move its folders, and leave a link at each old path
 #    so paths saved in settings (custom cursors, instance folders) keep working.
-if pgrep -u "$(id -u)" -f "mocktail|/aeram( |$)|/aeam( |$)" > /dev/null 2>&1; then
+# running Mocktail (its binaries live in .../bin/mocktail and .../lib/mocktail/) or the app (python on the
+# aeam/aeram launcher); a shell that merely mentions the folder does not count
+if pgrep -u "$(id -u)" -f "/(bin|lib)/mocktail|^python[0-9.]* [^ ]*/(aeam|aeram)( |$)" > /dev/null 2>&1; then
     echo "[0] AEAM or Mocktail is running: folders keep their old names until the next install."
 else
     for pair in "${HOME}/.local/share/aeram:${HOME}/.local/share/aeam" \
