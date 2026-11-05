@@ -1,5 +1,5 @@
 """
-Server Monitor & Inspector Dialog for AERAM.
+Server Monitor & Inspector Dialog for AEAM.
 Allows monitoring live public servers, tracking player counts, ping, FPS,
 inspecting sub-place instances (e.g. Rogue Lineage Gaia / Khei), copying Job IDs,
 and auto-refreshing live server population statistics.
@@ -116,7 +116,7 @@ class ServerFinderDialog(BorderlessDialog):
         self._refresh_timer.setInterval(30000)  # 30 seconds
         self._refresh_timer.timeout.connect(self._fetch_servers)
 
-        self.setWindowTitle("Server Monitor - AERAM")
+        self.setWindowTitle("Server Monitor - AEAM")
         self.resize(800, 560)
         self.setMinimumSize(680, 460)
         self._init_ui()
@@ -264,7 +264,7 @@ class ServerFinderDialog(BorderlessDialog):
         bot_bar.addWidget(self.btn_copy_teleport)
 
         self.btn_select = QtWidgets.QPushButton("Select Server")
-        self.btn_select.setToolTip("Set Place ID and Job ID in AERAM without launching immediately")
+        self.btn_select.setToolTip("Set Place ID and Job ID in AEAM without launching immediately")
         self.btn_select.clicked.connect(lambda: self._on_choose_server(auto_join=False))
         bot_bar.addWidget(self.btn_select)
 

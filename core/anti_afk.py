@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AERAM Targeted Anti-AFK Engine (Interrupt-Free & Mocktail-Isolated).
+AEAM Targeted Anti-AFK Engine (Interrupt-Free & Mocktail-Isolated).
 Keeps background alts connected without ever interfering with active gameplay or desktop work:
 
 - Strictly Isolated: Targets ONLY Mocktail Roblox processes via in-process SDL3 event injection
@@ -43,7 +43,7 @@ except ImportError:
 log = logging.getLogger("AntiAFK")
 
 # Polled by native/libmocktail_mouse_helper.c (mtime change => pulse)
-AFK_PULSE_PATH = Path("/dev/shm/aeram_afk_pulse")
+AFK_PULSE_PATH = Path("/dev/shm/aeam_afk_pulse")
 
 
 def is_mocktail_game_cmdline(raw: bytes) -> bool:
@@ -79,7 +79,7 @@ class PhysicalIdleMonitor:
                     dev = InputDevice(p)
                     caps = dev.capabilities()
                     if ecodes.EV_KEY in caps or ecodes.EV_REL in caps:
-                        if "AERAM" not in dev.name:
+                        if "AEAM" not in dev.name and "AERAM" not in dev.name:
                             self.devices.append(dev)
                 except Exception:
                     pass
@@ -248,7 +248,7 @@ def main():
         format="%(asctime)s [%(levelname)s] [AntiAFK] %(message)s",
         datefmt="%H:%M:%S",
     )
-    parser = argparse.ArgumentParser(description="AERAM Targeted Anti-AFK Engine")
+    parser = argparse.ArgumentParser(description="AEAM Targeted Anti-AFK Engine")
     parser.add_argument("--interval", "-i", type=int, default=900, help="Seconds between pulses (default: 900 = 15m)")
     parser.add_argument("--idle-threshold", "-t", type=int, default=0, help="Idle threshold in seconds")
     parser.add_argument("--key", "-k", type=str, default="SPACE", help="Key to pulse (default: SPACE)")

@@ -11,7 +11,7 @@ from ui.theme import DARK_THEME_QSS
 
 class BorderlessDialog(QtWidgets.QDialog):
     """
-    Base dialog for all secondary windows in AERAM.
+    Base dialog for all secondary windows in AEAM.
     Enforces a borderless (FramelessWindowHint) presentation with a custom
     dark title bar, dragging, resizing, and keyboard handling (Esc to close).
     """
@@ -19,7 +19,7 @@ class BorderlessDialog(QtWidgets.QDialog):
     def __init__(
         self,
         parent: Optional[QtWidgets.QWidget] = None,
-        title: str = "AERAM",
+        title: str = "AEAM",
         can_maximize: bool = False,
         resizable: bool = True,
     ):
@@ -133,7 +133,7 @@ class BorderlessDialog(QtWidgets.QDialog):
     exec_ = exec
 
     def _format_title(self, raw_title: str) -> str:
-        clean = raw_title.replace(" - AERAM", "").replace(" — AERAM", "").strip()
+        clean = raw_title.replace(" - AEAM", "").replace(" — AEAM", "").strip()
         return f"// {clean.upper()}"
 
     def setWindowTitle(self, title: str) -> None:
@@ -237,13 +237,13 @@ class BorderlessDialog(QtWidgets.QDialog):
 class BorderlessInputDialog(BorderlessDialog):
     """
     Drop-in replacement for QInputDialog that is fully borderless, frameless,
-    and matches AERAM's achromatic pitch-black theme.
+    and matches AEAM's achromatic pitch-black theme.
     """
 
     def __init__(
         self,
         parent: Optional[QtWidgets.QWidget] = None,
-        title: str = "AERAM",
+        title: str = "AEAM",
         label: str = "",
         text: str = "",
         is_password: bool = False,
@@ -341,14 +341,14 @@ class BorderlessInputDialog(BorderlessDialog):
 class BorderlessMessageBox(BorderlessDialog):
     """
     Drop-in replacement for QMessageBox that is fully borderless, frameless,
-    and matches AERAM's achromatic pitch-black theme.
+    and matches AEAM's achromatic pitch-black theme.
     """
     StandardButton = QtWidgets.QMessageBox.StandardButton
 
     def __init__(
         self,
         parent: Optional[QtWidgets.QWidget] = None,
-        title: str = "AERAM",
+        title: str = "AEAM",
         text: str = "",
         buttons: QtWidgets.QMessageBox.StandardButton = QtWidgets.QMessageBox.StandardButton.Ok,
         default_button: Optional[QtWidgets.QMessageBox.StandardButton] = None,

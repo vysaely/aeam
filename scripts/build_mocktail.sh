@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AERAM: build Mocktail with AERAM's input-latency patch
+# AEAM: build Mocktail with AEAM's input-latency patch
 #
 # Clones upstream Mocktail at a pinned commit, applies native/mocktail/*.patch (in order),
 # builds it and installs it under ~/.local (bin/mocktail + lib/mocktail/).
-# Anything already installed there is backed up first. AERAM prefers this build
+# Anything already installed there is backed up first. AEAM prefers this build
 # over a system (AUR/.deb/.rpm) Mocktail once the marker file below exists.
 #
 # The patch adds:
 #   - MOCKTAIL_HOST_CURSOR: desktop hardware cursor instead of Roblox's
-#     frame-rendered arrow (AERAM sets it for main accounts)
+#     frame-rendered arrow (AEAM sets it for main accounts)
 #   - 1 ms input polling instead of 4 ms when presentation is unthrottled
 #   - removal of the Android client's 240 FPS clamp
 #   - a 100 us rest after empty engine polls instead of a spinning core
@@ -24,16 +24,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AERAM_DIR="$(dirname "${SCRIPT_DIR}")"
-PATCH_DIR="${AERAM_DIR}/native/mocktail"
+AEAM_DIR="$(dirname "${SCRIPT_DIR}")"
+PATCH_DIR="${AEAM_DIR}/native/mocktail"
 
 UPSTREAM_URL="https://github.com/komaruworld/mocktail.git"
 UPSTREAM_COMMIT="$(tr -d '[:space:]' < "${PATCH_DIR}/UPSTREAM_COMMIT")"
 
 PREFIX="${HOME}/.local"
-SRC_DIR="${AERAM_MOCKTAIL_SRC:-${HOME}/.cache/aeram/mocktail-src}"
+SRC_DIR="${AEAM_MOCKTAIL_SRC:-${HOME}/.cache/aeam/mocktail-src}"
 BUILD_DIR="${SRC_DIR}-build"
-MARKER="${PREFIX}/lib/mocktail/aeram-mocktail-patch"
+MARKER="${PREFIX}/lib/mocktail/aeam-mocktail-patch"
 JOBS="$(nproc 2>/dev/null || echo 4)"
 
 print_build_deps() {
@@ -61,12 +61,12 @@ fi
 if ! git -C "${SRC_DIR}" cat-file -e "${UPSTREAM_COMMIT}^{commit}" 2> /dev/null; then
     git -C "${SRC_DIR}" fetch --quiet origin
 fi
-# The checkout is AERAM-owned: discard any previous patch application.
+# The checkout is AEAM-owned: discard any previous patch application.
 git -C "${SRC_DIR}" checkout --quiet --force "${UPSTREAM_COMMIT}"
 git -C "${SRC_DIR}" clean --quiet -fdx
 git -C "${SRC_DIR}" submodule --quiet update --init --recursive
 
-echo "  * Applying AERAM patches..."
+echo "  * Applying AEAM patches..."
 for patch in "${PATCH_DIR}"/*.patch; do
     git -C "${SRC_DIR}" apply --whitespace=nowarn "${patch}"
     echo "    - $(basename "${patch}")"
@@ -101,4 +101,4 @@ fi
 
 cmake --install "${BUILD_DIR}" > /dev/null
 echo "${UPSTREAM_COMMIT} $(cat "${PATCH_DIR}"/*.patch | sha256sum | cut -c1-16)" > "${MARKER}"
-echo "  [✓] Installed AERAM-patched Mocktail to ${PREFIX}/bin/mocktail"
+echo "  [✓] Installed AEAM-patched Mocktail to ${PREFIX}/bin/mocktail"

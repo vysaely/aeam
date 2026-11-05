@@ -1,6 +1,6 @@
 """
 RFC 6238 TOTP (Time-Based One-Time Password) Generator and Google Authenticator
-migration QR code / URI parser for AERAM.
+migration QR code / URI parser for AEAM.
 Pure Python standard library implementation with zero external dependencies.
 """
 
@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Union, Tuple
 
-log = logging.getLogger("AERAM.TOTP")
+log = logging.getLogger("AEAM.TOTP")
 
 
 def generate_totp(secret: str, interval: int = 30, digits: int = 6, for_time: Optional[float] = None) -> str:

@@ -1,5 +1,5 @@
 """
-Main window for AERAM using the authentic RAM layout and clean dark aesthetics.
+Main window for AEAM using the authentic RAM layout and clean dark aesthetics.
 Supports Account Grouping, Dynamic Selection Counter, Sequential/Staggered Multi-Join,
 Mode Toggling (High / Low), and Fast utilitarian management.
 """
@@ -497,7 +497,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sort_order: Optional[QtCore.Qt.SortOrder] = None
         self.base_headers = ["Username", "Alias", "Group", "Mode", "Description"]
 
-        self.setWindowTitle("AERAM")
+        self.setWindowTitle("AEAM")
         self.setMinimumSize(740, 415)
         self.resize(920, 450)
 
@@ -622,7 +622,7 @@ class MainWindow(QtWidgets.QMainWindow):
         top_header_layout.setSpacing(8)
         top_header_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
 
-        lbl_brand = QtWidgets.QLabel("// AERAM <span style='color: #707070;'>· ROBLOX ACCOUNT MANAGER</span>")
+        lbl_brand = QtWidgets.QLabel("// AEAM <span style='color: #707070;'>· GAME ACCOUNT MANAGER</span>")
         lbl_brand.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         lbl_brand.setStyleSheet("color: #E8E8E8; font-weight: bold; font-size: 10px; letter-spacing: 1.5px;")
         lbl_brand.setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
@@ -753,7 +753,7 @@ class MainWindow(QtWidgets.QMainWindow):
         add_menu.addSeparator()
         add_menu.addAction("Add via Cookie Token...", self._open_add_account)
         add_menu.addSeparator()
-        add_menu.addAction("Import Windows RAM / .aeram File... (Ctrl+I)", self._open_import_ram)
+        add_menu.addAction("Import Windows RAM / .aeam File... (Ctrl+I)", self._open_import_ram)
         self.btn_add.setMenu(add_menu)
         left_bar.addWidget(self.btn_add)
 
@@ -1498,7 +1498,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg = f"Low physical RAM ({avail_gb:.1f} GB free). Alts paging to swap."
                 threading.Thread(
                     target=lambda: subprocess.run(
-                        ["notify-send", "-a", "AERAM", "-u", "normal", "AERAM Memory", msg],
+                        ["notify-send", "-a", "AEAM", "-u", "normal", "AEAM Memory", msg],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                         timeout=5,
@@ -1746,7 +1746,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self,
                     "Mocktail Not Found",
                     "Mocktail Roblox client runtime was not found on your system.\n\n"
-                    "AERAM is an account manager; it uses Mocktail to run Roblox on Linux.\n\n"
+                    "AEAM is an account manager; it uses Mocktail to run Roblox on Linux.\n\n"
                     + MocktailManager().get_installation_instructions()
                 )
                 return False
@@ -1760,7 +1760,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     "1. Open a terminal and run:\n"
                     "     mocktail\n"
                     "2. Wait for it to finish downloading the official Roblox client payload.\n"
-                    "3. Return to AERAM and click Join Server again!"
+                    "3. Return to AEAM and click Join Server again!"
                 )
             # Proactively ensure companion libraries are mirrored before launch
             if hasattr(self, "storage") and hasattr(self.storage, "ensure_mocktail_companion_libraries"):
@@ -1902,7 +1902,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(f"Warning: {warning}", 8000)
         if shutil.which("notify-send"):
             try:
-                subprocess.Popen(["notify-send", "-a", "AERAM", "-u", "normal", "AERAM Memory", warning])
+                subprocess.Popen(["notify-send", "-a", "AEAM", "-u", "normal", "AEAM Memory", warning])
             except Exception:
                 pass
 
@@ -2382,7 +2382,7 @@ class MainWindow(QtWidgets.QMainWindow):
         selected_grp = getattr(self, "selected_group", "All Groups")
         group = selected_grp if selected_grp and selected_grp not in ("All Groups", "All") else "Default"
 
-        # Modeless dialog so user can still interact with AERAM main window
+        # Modeless dialog so user can still interact with AEAM main window
         dialog = WebLoginDialog(
             storage=self.storage,
             api=self.api,
@@ -2440,9 +2440,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         file_path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
-            "Export Encrypted AERAM Vault",
-            str(Path.home() / "aeram_backup.aeram"),
-            "AERAM Encrypted Vault (*.aeram);;All Files (*)",
+            "Export Encrypted AEAM Vault",
+            str(Path.home() / "aeam_backup.aeam"),
+            "AEAM Encrypted Vault (*.aeam);;All Files (*)",
         )
         if not file_path:
             return
@@ -2929,7 +2929,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Signs out of all other active sessions for selected account(s) one-by-one.
         Invalidates all other logged-in browsers and devices while updating
-        AERAM with the newly rotated session token so each account remains logged in.
+        AEAM with the newly rotated session token so each account remains logged in.
         """
         targets = self._selected_accounts()
         if not targets:
@@ -3217,7 +3217,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menu.addSeparator()
 
         # ── 6. Vault Backup ──
-        menu.addAction("Export Encrypted Archive (.aeram)...", self._export_encrypted_archive)
+        menu.addAction("Export Encrypted Archive (.aeam)...", self._export_encrypted_archive)
 
     def _test_self_heal_simulation(self):
         running = getattr(self.runner, "active_instances", {})

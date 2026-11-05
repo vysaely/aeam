@@ -1,6 +1,6 @@
 """
 Embedded Chromium Web Login modal dialog for Roblox authentication.
-Allows users to log in directly inside AERAM, solving 2FA and Arkose FunCAPTCHAs
+Allows users to log in directly inside AEAM, solving 2FA and Arkose FunCAPTCHAs
 with native browser fidelity and hardware acceleration, capturing .ROBLOSECURITY
 cookies automatically without manual copy-pasting.
 """
@@ -165,8 +165,8 @@ ROBLOX_2FA_DOM_FIX_JS = """
         }
     } catch(e) {}
 
-    if (window._aeram_fix_installed) return;
-    window._aeram_fix_installed = true;
+    if (window._aeam_fix_installed) return;
+    window._aeam_fix_installed = true;
 
     // 1. Break Bootstrap / jQuery focus traps that yank focus away from 2FA
     try {
@@ -202,9 +202,9 @@ ROBLOX_2FA_DOM_FIX_JS = """
 
     // 4. Inject clean CSS rules that apply to present and future elements with ZERO DOM mutation loops
     function injectStyles() {
-        if (document.getElementById('aeram-2fa-styles')) return;
+        if (document.getElementById('aeam-2fa-styles')) return;
         var style = document.createElement('style');
-        style.id = 'aeram-2fa-styles';
+        style.id = 'aeam-2fa-styles';
         style.textContent = `
             .modal-backdrop, .MuiBackdrop-root, .MuiModal-backdrop, [class*="backdrop" i] {
                 pointer-events: none !important;
@@ -330,7 +330,7 @@ class WebLoginDialog(BorderlessDialog):
             elif self.target_account:
                 self.setWindowTitle(f"Roblox Web Login - Re-authenticate @{self.target_account.username}")
             else:
-                self.setWindowTitle("Roblox Web Login - AERAM")
+                self.setWindowTitle("Roblox Web Login - AEAM")
             self.resize(1080, 800)
             self.setMinimumSize(850, 620)
 
@@ -540,7 +540,7 @@ class WebLoginDialog(BorderlessDialog):
 
         # Install global script running across all main frames and cross-origin subframes/iframes
         subframe_fix = QWebEngineScript()
-        subframe_fix.setName("aeram_subframe_focus_fix")
+        subframe_fix.setName("aeam_subframe_focus_fix")
         subframe_fix.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady)
         subframe_fix.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld)
         subframe_fix.setRunsOnSubFrames(True)
@@ -592,7 +592,7 @@ class WebLoginDialog(BorderlessDialog):
         else:
             self.status_label = QtWidgets.QLabel(
                 "Enter your Roblox credentials above. Complete any 2FA or Arkose verification puzzles. "
-                "AERAM will automatically detect your login and securely encrypt your session into the vault."
+                "AEAM will automatically detect your login and securely encrypt your session into the vault."
             )
             self.status_label.setStyleSheet("color: #888888; font-size: 11px;")
         self.status_label.setWordWrap(True)
@@ -739,7 +739,7 @@ class WebLoginDialog(BorderlessDialog):
                 if hasattr(self, "status_label"):
                     self.status_label.setStyleSheet("color: #ffffff; font-size: 11px; font-weight: bold;")
                     self.status_label.setText(
-                        f"Launching place {place_id or ''} for @{self.target_account.username} via AERAM..."
+                        f"Launching place {place_id or ''} for @{self.target_account.username} via AEAM..."
                     )
                 self.runner.launch_instance(self.target_account, place_id=place_id, job_id=job_id)
                 return
@@ -1130,11 +1130,11 @@ class WebLoginDialog(BorderlessDialog):
             }
 
             function submit2FA() {
-                if (window._aeram_2fa_submitted === code) return false;
+                if (window._aeam_2fa_submitted === code) return false;
                 var buttons = findVerifyButtons();
                 for (var i = 0; i < buttons.length; i++) {
                     if (!buttons[i].disabled) {
-                        window._aeram_2fa_submitted = code;
+                        window._aeam_2fa_submitted = code;
                         buttons[i].click();
                         return true;
                     }
@@ -1344,7 +1344,7 @@ class WebLoginDialog(BorderlessDialog):
             "Sign Out All Other Sessions",
             f"Are you sure you want to sign out of all other sessions for {user_label}?\n\n"
             "- This will invalidate all other logged-in browsers and devices.\n"
-            "- AERAM will keep this account logged in with a freshly rotated session cookie.",
+            "- AEAM will keep this account logged in with a freshly rotated session cookie.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -1379,7 +1379,7 @@ class WebLoginDialog(BorderlessDialog):
                 self,
                 "Sign Out Successful",
                 f"Successfully signed out of all other sessions for {user_label}!\n\n"
-                "A fresh session token has been securely stored in AERAM.",
+                "A fresh session token has been securely stored in AEAM.",
             )
             # Reload page with the new rotated session
             self.view.reload()

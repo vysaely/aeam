@@ -32,7 +32,7 @@ class AddAccountDialog(BorderlessDialog):
         self.api = api
         self.new_account: Optional[RobloxAccount] = None
 
-        self.setWindowTitle("Add Roblox Account - AERAM")
+        self.setWindowTitle("Add Roblox Account - AEAM")
         self.setFixedWidth(460)
         self._init_ui()
 
@@ -139,7 +139,7 @@ class ImportRAMDialog(BorderlessDialog):
         self.api = api
         self.parsed_accounts: List[Dict[str, Any]] = []
 
-        self.setWindowTitle("Import Windows RAM / Cookie Data - AERAM")
+        self.setWindowTitle("Import Windows RAM / Cookie Data - AEAM")
         self.resize(600, 480)
         self._init_ui()
 
@@ -215,7 +215,7 @@ class ImportRAMDialog(BorderlessDialog):
 
     def _browse_file(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Select RAM Account Data File", "", "All Supported (*.aeram *.json *.enc *.txt *.csv);;AERAM Vault (*.aeram);;RAM Accounts (*.json *.enc);;Cookie Lists (*.txt *.csv);;All Files (*)"
+            self, "Select RAM Account Data File", "", "All Supported (*.aeam *.aeram *.json *.enc *.txt *.csv);;AEAM Vault (*.aeam *.aeram);;RAM Accounts (*.json *.enc);;Cookie Lists (*.txt *.csv);;All Files (*)"
         )
         if path:
             self.file_path_input.setText(path)
@@ -519,7 +519,7 @@ class FastFlagsDialog(BorderlessDialog):
     def __init__(self, storage: StorageManager, parent=None):
         super().__init__(parent, title="Engine & Graphics Settings", can_maximize=False, resizable=False)
         self.storage = storage
-        self.setWindowTitle("Engine & Graphics Settings - AERAM")
+        self.setWindowTitle("Engine & Graphics Settings - AEAM")
         self.setFixedWidth(560)
         self._updating_preset = False
         self._init_ui()
@@ -705,7 +705,7 @@ class FastFlagsDialog(BorderlessDialog):
         self.combo_cursor.setFixedHeight(26)
         self.combo_cursor.setToolTip(
             "Hardware shows the desktop cursor, which moves at the display's refresh instead of "
-            "waiting for the next rendered game frame. Needs AERAM's Mocktail build; games with a "
+            "waiting for the next rendered game frame. Needs AEAM's Mocktail build; games with a "
             "custom mouse icon may show both cursors. Applies on next launch."
         )
         grid_eng.addWidget(self.combo_cursor, 3, 1)
@@ -719,7 +719,7 @@ class FastFlagsDialog(BorderlessDialog):
         self.btn_shiftlock.setFixedHeight(26)
         self.btn_shiftlock.setToolTip(
             "PNG shown instead of Roblox's shift-lock icon in every account, including after Roblox "
-            "updates. Needs AERAM's Mocktail build. Applies on next launch."
+            "updates. Needs AEAM's Mocktail build. Applies on next launch."
         )
         self.btn_shiftlock.clicked.connect(self._browse_shiftlock_cursor)
         shiftlock_row.addWidget(self.btn_shiftlock)
@@ -925,7 +925,7 @@ class SettingsDialog(BorderlessDialog):
     def __init__(self, storage: StorageManager, parent=None):
         super().__init__(parent, title="Settings", can_maximize=False, resizable=False)
         self.storage = storage
-        self.setWindowTitle("Settings - AERAM")
+        self.setWindowTitle("Settings - AEAM")
         self.setFixedWidth(500)
         self._init_ui()
 
@@ -1188,7 +1188,7 @@ class DiagnosticsDialog(BorderlessDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent, title="System Diagnostics & Portability", can_maximize=True, resizable=True)
-        self.setWindowTitle("System Diagnostics & Portability - AERAM")
+        self.setWindowTitle("System Diagnostics & Portability - AEAM")
         self.setMinimumSize(620, 520)
         self.runner = DiagnosticsRunner()
         self.current_report = None
@@ -1320,7 +1320,7 @@ class UpdateDialog(BorderlessDialog):
 
     def __init__(self, parent=None, auto_check: bool = True):
         super().__init__(parent, title="Application Updates", can_maximize=False, resizable=False)
-        self.setWindowTitle("Application Updates - AERAM")
+        self.setWindowTitle("Application Updates - AEAM")
         self.setFixedWidth(500)
         self.updater = AppUpdater()
         self._check_worker: Optional[UpdateCheckWorker] = None
@@ -1341,7 +1341,7 @@ class UpdateDialog(BorderlessDialog):
 
         desc = QtWidgets.QLabel(
             "<span style='color: #888888; font-size: 11px;'>"
-            "Checks the official repository (vysaely/aeram) for new releases and updates. "
+            "Checks the official repository (vysaely/aeam) for new releases and updates. "
             "Local database credentials and settings are strictly preserved."
             "</span>"
         )
@@ -1431,7 +1431,7 @@ class UpdateDialog(BorderlessDialog):
         self.btn_update.clicked.connect(self._start_update)
         btn_box.addWidget(self.btn_update)
 
-        self.btn_restart = QtWidgets.QPushButton("Restart AERAM")
+        self.btn_restart = QtWidgets.QPushButton("Restart AEAM")
         self.btn_restart.setObjectName("primaryBtn")
         self.btn_restart.setFixedHeight(28)
         self.btn_restart.setVisible(False)
@@ -1487,7 +1487,7 @@ class UpdateDialog(BorderlessDialog):
             self.lbl_status.setStyleSheet("color: #ffffff; font-weight: bold;")
             self.btn_update.setEnabled(True)
         else:
-            self.lbl_status.setText("AERAM is up to date.")
+            self.lbl_status.setText("AEAM is up to date.")
             self.lbl_status.setStyleSheet("color: #ffffff; font-weight: bold;")
             self.btn_update.setEnabled(False)
 
@@ -1514,7 +1514,7 @@ class UpdateDialog(BorderlessDialog):
             self.progress_bar.setValue(100)
             self.lbl_status.setText("Update installed successfully.")
             self.lbl_status.setStyleSheet("color: #ffffff; font-weight: bold;")
-            self.lbl_log.setText(msg + " Please restart AERAM to apply all changes.")
+            self.lbl_log.setText(msg + " Please restart AEAM to apply all changes.")
             self.btn_update.setVisible(False)
             self.btn_restart.setVisible(True)
         else:
@@ -1557,7 +1557,7 @@ class GroupManagerDialog(BorderlessDialog):
     def __init__(self, storage, parent=None):
         super().__init__(parent, title="Manage & Reorder Groups", can_maximize=False, resizable=True)
         self.storage = storage
-        self.setWindowTitle("Manage & Reorder Groups - AERAM")
+        self.setWindowTitle("Manage & Reorder Groups - AEAM")
         self.setMinimumSize(420, 480)
         self._init_ui()
 
@@ -1573,7 +1573,7 @@ class GroupManagerDialog(BorderlessDialog):
         desc = QtWidgets.QLabel(
             "<span style='color: #888888; font-size: 11px;'>"
             "Drag and drop groups up or down to set their custom display order. "
-            "The order is automatically saved and applied across AERAM."
+            "The order is automatically saved and applied across AEAM."
             "</span>"
         )
         desc.setWordWrap(True)
@@ -1985,7 +1985,7 @@ class BatchSignOutDialog(BorderlessDialog):
         self.storage = storage
         self.runner = runner
 
-        self.setWindowTitle(f"Sign Out of Other Sessions ({len(self.accounts)} Accounts) - AERAM")
+        self.setWindowTitle(f"Sign Out of Other Sessions ({len(self.accounts)} Accounts) - AEAM")
         self.setFixedWidth(520)
         self.setFixedHeight(390)
 
@@ -2247,7 +2247,7 @@ class GoogleAuthImportDialog(BorderlessDialog):
     """
     Dialog for importing 2-Step Verification / TOTP secret keys from any standard Authenticator.
     Decodes 'otpauth-migration://' QR code screenshots or raw URIs, correlates accounts
-    with AERAM's vault, and previews live 6-digit codes in real time.
+    with AEAM's vault, and previews live 6-digit codes in real time.
     """
     def __init__(self, accounts: List[RobloxAccount], storage: StorageManager, parent=None):
         super().__init__(parent, title="Authenticator (2FA) Importer", can_maximize=False, resizable=True)
@@ -2255,7 +2255,7 @@ class GoogleAuthImportDialog(BorderlessDialog):
         self.storage = storage
         self.parsed_records: List[Dict[str, Any]] = []
 
-        self.setWindowTitle("Authenticator (2FA) Importer - AERAM")
+        self.setWindowTitle("Authenticator (2FA) Importer - AEAM")
         self.setFixedWidth(660)
         self.setMinimumHeight(540)
         self.setAcceptDrops(True)
@@ -2357,7 +2357,7 @@ class GoogleAuthImportDialog(BorderlessDialog):
 
         # Table of Parsed Secrets & Matches
         self.table = QtWidgets.QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Authenticator Label", "Assign to AERAM Account", "Live Code Preview"])
+        self.table.setHorizontalHeaderLabels(["Authenticator Label", "Assign to AEAM Account", "Live Code Preview"])
         self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
@@ -2621,7 +2621,7 @@ class GoogleAuthImportDialog(BorderlessDialog):
             QMessageBox.warning(
                 self,
                 "No Accounts Assigned",
-                "Please assign at least one authenticator secret to an AERAM account using the dropdown menus.",
+                "Please assign at least one authenticator secret to an AEAM account using the dropdown menus.",
             )
 
 
@@ -2635,7 +2635,7 @@ class TwoFactorExportDialog(BorderlessDialog):
         self.accounts_with_2fa = [a for a in accounts if a.totp_secret]
         self._hide_keys = True
 
-        self.setWindowTitle(f"Export 2FA Secret Keys ({len(self.accounts_with_2fa)} Accounts) - AERAM")
+        self.setWindowTitle(f"Export 2FA Secret Keys ({len(self.accounts_with_2fa)} Accounts) - AEAM")
         self.setFixedWidth(660)
         self.setMinimumHeight(480)
 
@@ -2653,7 +2653,7 @@ class TwoFactorExportDialog(BorderlessDialog):
         desc = QtWidgets.QLabel(
             "<b>Two-Step Verification (2FA) Secret Keys</b><br>"
             "<span style='color: #888888; font-size: 11px;'>"
-            "Your 2FA keys are securely stored and encrypted in the local AERAM vault database. "
+            "Your 2FA keys are securely stored and encrypted in the local AEAM vault database. "
             "You can export them to standard <code>otpauth://</code> URIs, CSV, or JSON for backup or to import into authenticator apps (2FAS, Bitwarden, KeePassXC, Aegis)."
             "</span>"
         )
@@ -2808,7 +2808,7 @@ class TwoFactorExportDialog(BorderlessDialog):
         file_path, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
             self,
             "Save 2FA Keys to File",
-            "aeram_2fa_keys.txt",
+            "aeam_2fa_keys.txt",
             "otpauth URIs (*.txt);;JSON Format (*.json);;CSV Format (*.csv);;User:Key Pairs (*.txt);;All Files (*)",
         )
         if not file_path:
@@ -2932,7 +2932,7 @@ class ChangePasswordWorker(QtCore.QThread):
 
 class ChangePasswordDialog(BorderlessDialog):
     """
-    Borderless dialog allowing fast and secure Roblox account password changes directly from AERAM.
+    Borderless dialog allowing fast and secure Roblox account password changes directly from AEAM.
     Handles Two-Step Verification (2SV / TOTP) automatically via linked Google Authenticator
     keys or interactive prompt, and synchronizes updated credentials and rotated cookies
     into the encrypted vault.
@@ -2958,7 +2958,7 @@ class ChangePasswordDialog(BorderlessDialog):
         header_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-family: monospace; font-weight: 600;")
         layout.addWidget(header_lbl)
 
-        sub_lbl = QtWidgets.QLabel("Updates password directly on auth.roblox.com and synchronizes AERAM encrypted vault.")
+        sub_lbl = QtWidgets.QLabel("Updates password directly on auth.roblox.com and synchronizes AEAM encrypted vault.")
         sub_lbl.setStyleSheet("color: #707070; font-size: 10px; font-family: monospace;")
         sub_lbl.setWordWrap(True)
         layout.addWidget(sub_lbl)
@@ -3220,11 +3220,11 @@ class ChangePasswordDialog(BorderlessDialog):
             self.storage.save_account(self.account)
 
             self.lbl_status.setStyleSheet("color: #4EAA50; font-size: 11px; font-family: monospace; font-weight: bold;")
-            self.lbl_status.setText("Password updated successfully and saved to AERAM encrypted vault!")
+            self.lbl_status.setText("Password updated successfully and saved to AEAM encrypted vault!")
             QMessageBox.information(
                 self,
                 "Password Changed",
-                f"Password for @{self.account.username} was successfully changed on Roblox and updated in your AERAM vault."
+                f"Password for @{self.account.username} was successfully changed on Roblox and updated in your AEAM vault."
             )
             self.accept()
         else:
@@ -3734,12 +3734,12 @@ class BatchPasswordChangeDialog(BorderlessDialog):
 
     def _export_results_to_file(self):
         file_path, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Updated Passwords", "aeram_updated_passwords.txt", "Text Files (*.txt);;CSV Files (*.csv)"
+            self, "Export Updated Passwords", "aeam_updated_passwords.txt", "Text Files (*.txt);;CSV Files (*.csv)"
         )
         if not file_path:
             return
         try:
-            lines = [f"# AERAM Updated Passwords — {time.strftime('%Y-%m-%d %H:%M:%S')}"]
+            lines = [f"# AEAM Updated Passwords — {time.strftime('%Y-%m-%d %H:%M:%S')}"]
             for res in self._results:
                 acc = res["account"]
                 status = "SUCCESS" if res.get("ok") else f"FAILED ({res.get('msg')})"

@@ -1,5 +1,5 @@
 """
-Compositor & Desktop Window Management Abstraction for AERAM.
+Compositor & Desktop Window Management Abstraction for AEAM.
 Provides capability-based window discovery, focus management, and desktop integration
 across KDE Plasma Wayland, Hyprland Wayland, X11, and Generic Wayland compositors.
 """
@@ -206,7 +206,7 @@ class KWinWaylandCompositor(BaseCompositor):
         """
         script_path = None
         try:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".js", prefix="aeram_kwin_", delete=False, encoding="utf-8") as tf:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".js", prefix="aeam_kwin_", delete=False, encoding="utf-8") as tf:
                 tf.write(cycle_js)
                 script_path = Path(tf.name)
             try:

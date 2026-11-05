@@ -194,7 +194,7 @@ static int dbg_checked = 0;
 #define DBG(...) do { \
     if (!dbg_checked) { \
         dbg_checked = 1; \
-        if (getenv("AERAM_OVERLAY_DEBUG")) dbg_fp = fopen("/tmp/mocktail_overlay_debug.log", "a"); \
+        if (getenv("AEAM_OVERLAY_DEBUG")) dbg_fp = fopen("/tmp/mocktail_overlay_debug.log", "a"); \
     } \
     if (dbg_fp) { fprintf(dbg_fp, __VA_ARGS__); fflush(dbg_fp); } \
 } while (0)
@@ -287,7 +287,7 @@ static bool unclamp_process_framerate(void) {
 
     const uintptr_t value = find_target_fps_value(maps, count);
     if (value == 0) {
-        fprintf(stderr, "[AERAM-FPS] TaskSchedulerTargetFps not located; 240 FPS clamp left in place\n");
+        fprintf(stderr, "[AEAM-FPS] TaskSchedulerTargetFps not located; 240 FPS clamp left in place\n");
         return true;
     }
     static const unsigned char clamp_prefix[] = { 0xb9, 0xf0, 0x00, 0x00, 0x00, 0x39, 0xc8 };
@@ -310,7 +310,7 @@ static bool unclamp_process_framerate(void) {
             patched++;
         }
     }
-    fprintf(stderr, "[AERAM-FPS] Raised %d TaskSchedulerTargetFps 240 clamp(s) to %u\n", patched, uncapped_limit);
+    fprintf(stderr, "[AEAM-FPS] Raised %d TaskSchedulerTargetFps 240 clamp(s) to %u\n", patched, uncapped_limit);
     return true;
 }
 
@@ -320,7 +320,7 @@ static void maybe_unclamp_framerate(void) {
     static bool done = false;
     static uint64_t last_attempt_ms = 0;
     if (done) return;
-    const char *skip = getenv("AERAM_SKIP_FPS_UNCLAMP");
+    const char *skip = getenv("AEAM_SKIP_FPS_UNCLAMP");
     if (skip && skip[0] == '1') {
         done = true;
         return;
@@ -753,7 +753,7 @@ static void run_anti_afk(void) {
         last_shm_poll = now_ms;
         struct stat st;
         // Ignore pulse files created by other users (anyone can create files in /dev/shm)
-        if (lstat("/dev/shm/aeram_afk_pulse", &st) == 0 && S_ISREG(st.st_mode) && st.st_uid == getuid()) {
+        if (lstat("/dev/shm/aeam_afk_pulse", &st) == 0 && S_ISREG(st.st_mode) && st.st_uid == getuid()) {
             if (st.st_mtime > last_shm_pulse_time) {
                 last_shm_pulse_time = st.st_mtime;
                 do_pulse = true;

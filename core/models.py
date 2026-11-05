@@ -1,5 +1,5 @@
 """
-Core domain data models for AERAM.
+Core domain data models for AEAM.
 """
 
 from dataclasses import dataclass, field

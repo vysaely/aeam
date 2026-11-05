@@ -1,5 +1,5 @@
 """
-Dedicated Mocktail Runtime Integration Layer for AERAM.
+Dedicated Mocktail Runtime Integration Layer for AEAM.
 Responsible for detecting Mocktail installations, resolving executable paths,
 identifying versions, validating configurations, checking companion helpers,
 and providing safe, idempotent setup/rollback workflows.
@@ -20,9 +20,11 @@ log = logging.getLogger("MocktailManager")
 
 FLATPAK_APP_ID = "space.bigrat.mocktail"
 RELEASES_URL = "https://github.com/komaruworld/mocktail/releases"
-# Written by scripts/build_mocktail.sh next to the AERAM-patched build.
-AERAM_PATCH_MARKER_NAME = "aeram-mocktail-patch"
-# Present only in Mocktail builds carrying AERAM's input-latency patch.
+# Written by scripts/build_mocktail.sh next to the AEAM-patched build.
+AEAM_PATCH_MARKER_NAME = "aeam-mocktail-patch"
+# Builds made before the AERAM -> AEAM rename (2026-11-06) carry this name.
+LEGACY_PATCH_MARKER_NAMES = ("aeram-mocktail-patch",)
+# Present only in Mocktail builds carrying AEAM's input-latency patch.
 _LATENCY_PATCH_SIGNATURE = b"MOCKTAIL_HOST_CURSOR"
 _latency_patch_cache: dict = {}
 
@@ -169,10 +171,11 @@ class MocktailManager:
         if self.custom_bin_path and Path(self.custom_bin_path).exists():
             return Path(self.custom_bin_path)
 
-        # An AERAM-patched build (scripts/build_mocktail.sh) wins over a system package on PATH
+        # An AEAM-patched build (scripts/build_mocktail.sh) wins over a system package on PATH
         local = Path.home() / ".local"
         patched_bin = local / "bin" / "mocktail"
-        if (local / "lib" / "mocktail" / AERAM_PATCH_MARKER_NAME).exists() \
+        markers = (AEAM_PATCH_MARKER_NAME, *LEGACY_PATCH_MARKER_NAMES)
+        if any((local / "lib" / "mocktail" / m).exists() for m in markers) \
                 and patched_bin.exists() and os.access(patched_bin, os.X_OK):
             return patched_bin
 
@@ -355,7 +358,7 @@ class MocktailManager:
 
     @staticmethod
     def sandboxed_install_present() -> bool:
-        """True when Mocktail is installed only in a form AERAM cannot multi-instance (Flatpak)."""
+        """True when Mocktail is installed only in a form AEAM cannot multi-instance (Flatpak)."""
         for root in (Path("/var/lib/flatpak/app"), Path.home() / ".local" / "share" / "flatpak" / "app"):
             if (root / FLATPAK_APP_ID).exists():
                 return True
@@ -386,7 +389,7 @@ class MocktailManager:
         note = ""
         if self.sandboxed_install_present():
             note = (
-                "Mocktail is installed as a Flatpak. AERAM cannot use it: running several accounts at once "
+                "Mocktail is installed as a Flatpak. AEAM cannot use it: running several accounts at once "
                 "needs a separate copy of the Mocktail program per account, which the Flatpak sandbox "
                 "does not allow. The AppImage has the same limitation. Install the native package too:\n\n"
             )

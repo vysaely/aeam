@@ -1,5 +1,5 @@
 """
-AERAM core subsystems.
+AEAM core subsystems.
 """
 from .models import RobloxAccount, RunningInstance, FavoriteGame
 from .vault import Vault, VaultError, WrongPasswordError

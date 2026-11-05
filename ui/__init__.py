@@ -1,5 +1,5 @@
 """
-User interface modules for Linux Roblox Account Manager.
+User interface modules for AEAM, a game account manager for Linux.
 """
 from .main_window import MainWindow
 from .theme import DARK_THEME_QSS

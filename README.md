@@ -1,9 +1,9 @@
-# AERAM
+# AEAM
 
-Roblox Account Manager for Linux. Run several Roblox accounts at once, each in its own isolated
+Game account manager for Linux. Roblox is supported today: run several Roblox accounts at once, each in its own isolated
 [Mocktail](https://github.com/komaruworld/mocktail) instance.
 
-![AERAM](assets/preview.png)
+![AEAM](assets/preview.png)
 
 - Encrypted account vault (passwords and `.ROBLOSECURITY` cookies, libsodium)
 - Launch many accounts at once; join by Place ID / Job ID or follow a user
@@ -28,14 +28,14 @@ Mocktail's [Build from source](https://github.com/komaruworld/mocktail#build-fro
 **2. Installer**
 
 ```bash
-git clone https://github.com/vysaely/aeram.git
-cd aeram
+git clone https://github.com/vysaely/aeam.git
+cd aeam
 ./install.sh
 ```
 
-The installer builds Mocktail with AERAM's patches (hardware cursor, 1 ms input, no 240 FPS cap, lower CPU use,
+The installer builds Mocktail with AEAM's patches (hardware cursor, 1 ms input, no 240 FPS cap, lower CPU use,
 one Enter to send chat, zoom in shift lock, in-game blocking works)
-and adds AERAM to your app launcher. Run it again to update.
+and adds AEAM to your app launcher. Run it again to update.
 
 Already have Mocktail from the AUR (`mocktail-bin`) or a `.deb`/`.rpm`? Use `./install.sh --no-mocktail`.
 The Flatpak and AppImage versions of Mocktail can't run several accounts at once.
@@ -43,11 +43,11 @@ The Flatpak and AppImage versions of Mocktail can't run several accounts at once
 ## Usage
 
 ```bash
-aeram         # open the app
-aeram --help  # command-line options
+aeam         # open the app
+aeam --help  # command-line options
 ```
 
-Uninstall: `./install.sh --uninstall` (your accounts in `~/.local/share/aeram` are kept).
+Uninstall: `./install.sh --uninstall` (your accounts in `~/.local/share/aeam` are kept).
 
 ## License
 

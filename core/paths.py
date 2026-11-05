@@ -1,5 +1,5 @@
 """
-Locates AERAM's data directory (~/.local/share/aeram).
+Locates AEAM's data directory (~/.local/share/aeam; AERAM's aeram/ before the 2026-11-06 rename).
 """
 
 import sqlite3
@@ -22,16 +22,17 @@ def _has_accounts(base_dir: Path) -> bool:
 
 
 def default_base_dir() -> Path:
-    # Installs from before the AERAM rename keep their accounts in ~/.local/share/ram-linux.
-    legacy = Path.home() / ".local" / "share" / "ram-linux"
-    aeram_dir = Path.home() / ".local" / "share" / "aeram"
-    # Prefer whichever directory actually holds accounts: an empty aeram/ directory (created by
-    # a repair step or a first launch) must not hide an existing legacy ram-linux vault.
-    for candidate in (aeram_dir, legacy):
+    share = Path.home() / ".local" / "share"
+    aeam_dir = share / "aeam"
+    # Installs from before the renames keep their accounts in ~/.local/share/aeram (AERAM,
+    # until 2026-11-06) or ~/.local/share/ram-linux; install.sh moves aeram/ to aeam/.
+    legacy = (share / "aeram", share / "ram-linux")
+    # Prefer whichever directory actually holds accounts: an empty aeam/ directory (created by
+    # a repair step or a first launch) must not hide an existing legacy vault.
+    for candidate in (aeam_dir, *legacy):
         if _has_accounts(candidate):
             return candidate
-    if aeram_dir.exists():
-        return aeram_dir
-    if legacy.exists():
-        return legacy
-    return aeram_dir
+    for candidate in (aeam_dir, *legacy):
+        if candidate.exists():
+            return candidate
+    return aeam_dir

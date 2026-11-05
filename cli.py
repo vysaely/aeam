@@ -1,5 +1,5 @@
 """
-Command-line interface (CLI) for AERAM.
+Command-line interface (CLI) for AEAM.
 Uses the identical underlying core logic as the GUI. Never exposes or logs secrets.
 """
 
@@ -34,19 +34,19 @@ def install_desktop_launcher(project_root: Path):
     bin_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Install Icons (Scalable SVG + 512x512 PNG)
-    src_svg = project_root / "assets" / "aeram.svg"
+    src_svg = project_root / "assets" / "aeam.svg"
     if src_svg.exists():
-        shutil.copy2(src_svg, icons_dir / "aeram.svg")
-        print(f"[OK] Installed scalable icon: {icons_dir / 'aeram.svg'}")
+        shutil.copy2(src_svg, icons_dir / "aeam.svg")
+        print(f"[OK] Installed scalable icon: {icons_dir / 'aeam.svg'}")
 
-    src_png = project_root / "assets" / "aeram.png"
+    src_png = project_root / "assets" / "aeam.png"
     if src_png.exists():
-        shutil.copy2(src_png, icons_512_dir / "aeram.png")
-        print(f"[OK] Installed 512x512 raster icon: {icons_512_dir / 'aeram.png'}")
+        shutil.copy2(src_png, icons_512_dir / "aeam.png")
+        print(f"[OK] Installed 512x512 raster icon: {icons_512_dir / 'aeam.png'}")
 
     # 2. Install executable links to ~/.local/bin
-    executable_src = project_root / "aeram"
-    for name in ("aeram", "aem"):
+    executable_src = project_root / "aeam"
+    for name in ("aeam", "aem"):
         symlink_dest = bin_dir / name
         try:
             if symlink_dest.exists() or symlink_dest.is_symlink():
@@ -54,23 +54,23 @@ def install_desktop_launcher(project_root: Path):
             symlink_dest.symlink_to(executable_src)
         except Exception as e:
             print(f"[WARN] Could not create symlink {name} in ~/.local/bin: {e}")
-    print(f"[OK] Linked CLI executable to: {bin_dir / 'aeram'}")
+    print(f"[OK] Linked CLI executable to: {bin_dir / 'aeam'}")
 
     # 3. Install .desktop file
-    desktop_file = apps_dir / "aeram.desktop"
-    exec_path = str(bin_dir / "aeram")
+    desktop_file = apps_dir / "aeam.desktop"
+    exec_path = str(bin_dir / "aeam")
     content = f"""[Desktop Entry]
 Type=Application
-Name=AERAM
-GenericName=Roblox Account Manager
+Name=AEAM
+GenericName=Game Account Manager
 Comment=Native Linux multi-instance account manager for Roblox (Mocktail runtime)
 Exec={exec_path} --gui %u
-Icon=aeram
+Icon=aeam
 Terminal=false
 Categories=Game;
-Keywords=aeram;aem;roblox;ram;mocktail;multi-instance;accounts;hyprland;kde;
+Keywords=aeam;aem;roblox;ram;mocktail;multi-instance;accounts;hyprland;kde;
 StartupNotify=true
-StartupWMClass=aeram
+StartupWMClass=aeam
 Actions=StopAll;ListAccounts;Diagnostics;
 
 [Desktop Action StopAll]
@@ -111,7 +111,7 @@ Exec={exec_path} --diagnostics
         except Exception:
             pass
 
-    print("[OK] AERAM successfully integrated into your desktop environment!")
+    print("[OK] AEAM successfully integrated into your desktop environment!")
 
 
 def run_cli(args: argparse.Namespace, storage: StorageManager, api: RobloxAPI, runner: InstanceRunner):
@@ -125,7 +125,7 @@ def run_cli(args: argparse.Namespace, storage: StorageManager, api: RobloxAPI, r
         accounts = storage.list_accounts()
         print(f"\n==================== ROBLOX ACCOUNTS ({len(accounts)}) ====================")
         if not accounts:
-            print("No accounts configured yet. Run 'aeram --add <cookie>' or 'aeram --import <file>'.")
+            print("No accounts configured yet. Run 'aeam --add <cookie>' or 'aeam --import <file>'.")
         else:
             fmt = "{:<4} {:<20} {:<18} {:<14} {:<14} {:<12}"
             print(fmt.format("#", "USERNAME", "ALIAS", "GROUP", "MODE", "STATUS"))

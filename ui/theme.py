@@ -1,5 +1,5 @@
 """
-AERAM — Complete Monochrome TUI-GUI Design System (QSS).
+AEAM — Monochrome TUI-GUI Design System (QSS), drawn in the system's colours at run time (ui/system_colors.py).
 Pure pitch-black background, strictly achromatic palette, genuine character-grid alignment.
 
 Palette Foundation:

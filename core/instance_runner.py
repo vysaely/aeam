@@ -26,7 +26,7 @@ from .models import RobloxAccount, RunningInstance
 from .storage import StorageManager, DEFAULT_ALT_FPS, DEFAULT_ALT_MEMORY_HIGH_MB, FRM_QUALITY_FOR_LEVEL
 
 # Written to instance.log at every launch; see SelfHealEngine.get_disconnect_reason.
-LAUNCH_LOG_MARKER = "=== AERAM launch"
+LAUNCH_LOG_MARKER = "=== AEAM launch"
 INSTANCE_LOG_ROTATE_BYTES = 8 * 1024 * 1024
 from .auth_state import AccountAuthState, AccountAuthStateManager
 
@@ -483,7 +483,7 @@ class InstanceRunner:
             env["LD_PRELOAD"] = f"{mouse_helper}:{existing_preload}".rstrip(":") if existing_preload else str(mouse_helper)
             if mock_info.latency_patched:
                 # Mocktail already raised libroblox's FPS clamps; skip the helper's one-off text scan
-                env["AERAM_SKIP_FPS_UNCLAMP"] = "1"
+                env["AEAM_SKIP_FPS_UNCLAMP"] = "1"
 
         try:
             target_fps = int(self.storage.get_account_target_fps(account))
@@ -502,7 +502,7 @@ class InstanceRunner:
         limit_fps = 10000 if is_unlimited else target_fps
 
         env["MOCKTAIL_GRAPHICS_QUALITY"] = graphics_quality
-        # Custom shift-lock icon, served by AERAM's Mocktail build in place of Roblox's (survives updates)
+        # Custom shift-lock icon, served by AEAM's Mocktail build in place of Roblox's (survives updates)
         shiftlock_cursor = self.storage.get_setting("shiftlock_cursor_path", "")
         if isinstance(shiftlock_cursor, str) and shiftlock_cursor.strip() and os.path.isfile(shiftlock_cursor.strip()):
             shiftlock_cursor = shiftlock_cursor.strip()
@@ -529,7 +529,7 @@ class InstanceRunner:
             env["MOCKTAIL_FULLSCREEN_READINESS"] = "1"
             env["MOCKTAIL_MULTITHREADED_RENDERING"] = "1"
             env["MOCKTAIL_PHYSICS_WORKER_MODE"] = "throughput"
-            # Desktop hardware cursor instead of Roblox's frame-rendered arrow (AERAM's Mocktail build)
+            # Desktop hardware cursor instead of Roblox's frame-rendered arrow (AEAM's Mocktail build)
             if (self.storage.get_setting("main_host_cursor", "true") or "true").lower() != "false":
                 env["MOCKTAIL_HOST_CURSOR"] = "1"
 
@@ -775,7 +775,7 @@ class InstanceRunner:
 
     def _instance_pgid(self, pid: int) -> Optional[int]:
         """The instance's process group when it leads its own (setsid launch), otherwise None."""
-        # An adopted instance started elsewhere may share a group with a shell or with AERAM.
+        # An adopted instance started elsewhere may share a group with a shell or with AEAM.
         try:
             candidate = os.getpgid(pid)
             if candidate == pid and candidate != os.getpgrp():
@@ -837,7 +837,7 @@ class InstanceRunner:
             if pgid is not None or not exited:
                 self._signal_instance(inst.pid, pgid, signal.SIGKILL)
                 if not exited:
-                    # Reap it, or a launched child lingers as a zombie until AERAM exits.
+                    # Reap it, or a launched child lingers as a zombie until AEAM exits.
                     self._wait_for_exit(inst.pid, 0.5)
 
         # Clean up instance runtime lock directory

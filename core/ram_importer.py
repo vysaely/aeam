@@ -183,11 +183,11 @@ def import_from_file_or_text(
 
     if path:
         raw_bytes = path.read_bytes()
-        from .migration import is_aeram_export, decrypt_aeram_export
-        if is_aeram_export(raw_bytes):
+        from .migration import is_aeam_export, decrypt_aeam_export
+        if is_aeam_export(raw_bytes):
             if not password:
                 return [], True
-            return decrypt_aeram_export(raw_bytes, password), False
+            return decrypt_aeam_export(raw_bytes, password), False
         elif is_ram_encrypted(raw_bytes):
             if not password:
                 return [], True

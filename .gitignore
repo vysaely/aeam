@@ -1,6 +1,6 @@
 # ==============================================================================
-# AERAM (.gitignore)
-# Roblox Account Manager
+# AEAM (.gitignore)
+# Game Account Manager
 # ==============================================================================
 
 # Python Caches & Bytecode
@@ -52,7 +52,7 @@ cookies.txt
 mains.txt
 *.cookie
 *.cookies
-*.aeram
+*.aeam
 
 # Logs & Temporary Files
 *.log

@@ -27,7 +27,7 @@ DEFAULT_SHARED_MOCKTAIL = Path.home() / ".local" / "share" / "mocktail"
 DEFAULT_ALT_FPS = "6"
 # cgroup MemoryHigh per alt; much lower makes Roblox page constantly
 DEFAULT_ALT_MEMORY_HIGH_MB = "900"
-# AERAM's 1-10 graphics level -> Roblox's 1-21 FRM quality scale
+# AEAM's 1-10 graphics level -> Roblox's 1-21 FRM quality scale
 FRM_QUALITY_FOR_LEVEL = {1: 1, 2: 3, 3: 5, 4: 7, 5: 9, 6: 11, 7: 14, 8: 16, 9: 18, 10: 21}
 
 
@@ -984,11 +984,11 @@ class StorageManager:
             try:
                 parsed = json.loads(custom_raw)
                 if isinstance(parsed, dict):
-                    # AERAM's FPS setting reaches Mocktail as frame_rate_limit, and Mocktail
+                    # AEAM's FPS setting reaches Mocktail as frame_rate_limit, and Mocktail
                     # refuses to start when a FastFlag sets these to anything else.
                     for owned in ("DFIntTaskSchedulerTargetFps", "FFlagGameBasicSettingsFramerateCap5"):
                         if parsed.pop(owned, None) is not None:
-                            log.warning(f"Ignoring custom {owned}: set the FPS cap in AERAM's settings instead")
+                            log.warning(f"Ignoring custom {owned}: set the FPS cap in AEAM's settings instead")
                     ff.update(parsed)
             except Exception as e:
                 log.warning(f"Failed to parse custom_fastflags_json: {e}")
@@ -1393,7 +1393,7 @@ class StorageManager:
     def get_runtime_dir(self, account: RobloxAccount) -> Path:
         """
         Returns the decoupled per-instance runtime directory.
-        Prefers /run/user/<uid>/aeram/<account_id> (tmpfs) on Linux to guarantee
+        Prefers /run/user/<uid>/aeam/<account_id> (tmpfs) on Linux to guarantee
         that UNIX domain socket paths never exceed the 108-byte kernel limit
         (UNIX_PATH_MAX). Falls back to <profile_dir>/run.
         """
@@ -1401,7 +1401,7 @@ class StorageManager:
         host_xdg = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{my_uid}"
         base = Path(host_xdg)
         if base.exists() and os.access(base, os.W_OK):
-            target = base / "aeram" / account.account_id
+            target = base / "aeam" / account.account_id
         else:
             target = self.get_profile_dir(account) / "run"
         return target
@@ -1448,7 +1448,7 @@ class StorageManager:
         self._provision_engine_settings(run_dir, account)
         return run_dir
 
-    ENGINE_PRESET_MARKER = ".aeram-engine-preset"
+    ENGINE_PRESET_MARKER = ".aeam-engine-preset"
 
     @staticmethod
     def _account_client_running(account: Optional[RobloxAccount]) -> bool:
@@ -1498,7 +1498,7 @@ class StorageManager:
         """
         Prepares Roblox's GlobalBasicSettings_13.xml before a launch.
 
-        Every launch: FramerateCap follows AERAM's FPS setting; alts stay at graphics level 1
+        Every launch: FramerateCap follows AEAM's FPS setting; alts stay at graphics level 1
         and muted. The in-game preset (graphics level, camera sensitivity, shift-lock switch)
         is written when a settings file is created and once after each "Apply Preset", so
         changes made in Roblox's own menu persist between launches. Master volume is only

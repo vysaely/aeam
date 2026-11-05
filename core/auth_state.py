@@ -1,5 +1,5 @@
 """
-AERAM Authentication Lifecycle State Machine.
+AEAM Authentication Lifecycle State Machine.
 Tracks per-account authentication status, enforces safety policies,
 suppresses automated retries on CAPTCHA / Arkose challenges,
 and deduplicates concurrent launch requests.

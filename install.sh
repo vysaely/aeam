@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AERAM: Installer & Linux Desktop Integration Script
-# Authentic Roblox Account Manager for Linux (Mocktail Runtime)
+# AEAM: Installer & Linux Desktop Integration Script
+# Game account manager for Linux (Roblox through the Mocktail runtime)
 # ==============================================================================
 
 set -e
@@ -36,10 +36,10 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --prefix <path>   Installation prefix (default: ~/.local)"
-            echo "  --no-mocktail     Don't build AERAM's patched Mocktail; use a system Mocktail package"
+            echo "  --no-mocktail     Don't build AEAM's patched Mocktail; use a system Mocktail package"
             echo "                    (by default the installer builds upstream Mocktail with native/mocktail/*.patch:"
             echo "                    hardware cursor, 1 ms input polling, no 240 FPS cap)"
-            echo "  --uninstall, -u   Remove AERAM desktop entries and launcher shortcuts"
+            echo "  --uninstall, -u   Remove AEAM desktop entries and launcher shortcuts"
             echo "  --help, -h        Show this help message"
             exit 0
             ;;
@@ -66,15 +66,15 @@ ICON_512_DIR="${PREFIX}/share/icons/hicolor/512x512/apps"
 # Handle uninstallation
 if [ "$UNINSTALL" = true ]; then
     echo "=========================================================="
-    echo "  AERAM: Uninstalling Desktop Integration"
+    echo "  AEAM: Uninstalling Desktop Integration"
     echo "=========================================================="
     echo ""
     echo "Removing CLI launcher shortcuts..."
-    rm -f "${BIN_DIR}/aeram" "${BIN_DIR}/aem" "${BIN_DIR}/ram-linux"
+    rm -f "${BIN_DIR}/aeam" "${BIN_DIR}/aem" "${BIN_DIR}/aeram" "${BIN_DIR}/ram-linux"
     
     echo "Removing desktop entry and icons..."
-    rm -f "${DESKTOP_DIR}/aeram.desktop" "${DESKTOP_DIR}/ram-linux.desktop" "${DESKTOP_DIR}/roblox-account-manager.desktop"
-    rm -f "${ICON_DIR}/aeram.svg" "${ICON_512_DIR}/aeram.png"
+    rm -f "${DESKTOP_DIR}/aeam.desktop" "${DESKTOP_DIR}/aeram.desktop" "${DESKTOP_DIR}/ram-linux.desktop" "${DESKTOP_DIR}/roblox-account-manager.desktop"
+    rm -f "${ICON_DIR}/aeam.svg" "${ICON_512_DIR}/aeam.png"
     
     if command -v update-desktop-database &> /dev/null; then
         update-desktop-database "${DESKTOP_DIR}" 2>/dev/null || true
@@ -83,16 +83,32 @@ if [ "$UNINSTALL" = true ]; then
         gtk-update-icon-cache -q -t -f "${PREFIX}/share/icons/hicolor" 2>/dev/null || true
     fi
     
-    echo "Done. AERAM desktop integration removed."
-    echo "Note: Account vaults in ~/.local/share/aeram were preserved."
+    echo "Done. AEAM desktop integration removed."
+    echo "Note: Account vaults in ~/.local/share/aeam were preserved."
     exit 0
 fi
 
 echo "=========================================================="
-echo "  AERAM: Linux Installer & System Integration"
+echo "  AEAM: Linux Installer & System Integration"
 echo "  Target: Arch Linux / Hyprland / KDE Plasma / Generic Wayland"
 echo "=========================================================="
 echo ""
+
+# 0. AERAM was renamed AEAM on 2026-11-06: move its folders, and leave a link at each old path
+#    so paths saved in settings (custom cursors, instance folders) keep working.
+if pgrep -u "$(id -u)" -f "mocktail|/aeram( |$)|/aeam( |$)" > /dev/null 2>&1; then
+    echo "[0] AEAM or Mocktail is running: folders keep their old names until the next install."
+else
+    for pair in "${HOME}/.local/share/aeram:${HOME}/.local/share/aeam" \
+                "${HOME}/.config/aeram:${HOME}/.config/aeam" \
+                "${HOME}/.cache/aeram:${HOME}/.cache/aeam"; do
+        old="${pair%%:*}"; new="${pair##*:}"
+        if [ -d "${old}" ] && [ ! -L "${old}" ] && [ ! -e "${new}" ]; then
+            mv "${old}" "${new}" && ln -s "${new}" "${old}"
+            echo "[0] Moved ${old} to ${new} (the old path links to it)"
+        fi
+    done
+fi
 
 # 1. Check Python version
 echo "[1/5] Checking Python runtime..."
@@ -173,7 +189,7 @@ if [[ "${MOCKTAIL_INFO}" == INSTALLED* ]]; then
     echo "  [✓] Mocktail detected: ${M_PATH} (Version: ${M_VER})"
 else
     echo "  [!] Mocktail binary not found on PATH or standard locations."
-    echo "      AERAM will manage accounts, but launching requires Mocktail."
+    echo "      AEAM will manage accounts, but launching requires Mocktail."
     python3 -c "
 import sys
 sys.path.insert(0, '${SCRIPT_DIR}')
@@ -186,13 +202,13 @@ if [ "${WITH_MOCKTAIL}" = true ]; then
     # Same fingerprint build_mocktail.sh writes, so re-running the installer skips the rebuild.
     PATCH_STAMP="$(tr -d '[:space:]' < "${SCRIPT_DIR}/native/mocktail/UPSTREAM_COMMIT") $(cat "${SCRIPT_DIR}"/native/mocktail/*.patch | sha256sum | cut -c1-16)"
     if [ -x "${HOME}/.local/bin/mocktail" ] \
-        && [ "$(cat "${HOME}/.local/lib/mocktail/aeram-mocktail-patch" 2>/dev/null)" = "${PATCH_STAMP}" ]; then
-        echo "  [✓] AERAM-patched Mocktail is up to date."
+        && [ "$(cat "${HOME}/.local/lib/mocktail/aeam-mocktail-patch" 2>/dev/null)" = "${PATCH_STAMP}" ]; then
+        echo "  [✓] AEAM-patched Mocktail is up to date."
     else
-        echo "[3b] Building AERAM-patched Mocktail (skip with --no-mocktail)..."
+        echo "[3b] Building AEAM-patched Mocktail (skip with --no-mocktail)..."
         if ! "${SCRIPT_DIR}/scripts/build_mocktail.sh"; then
             if [[ "${MOCKTAIL_INFO}" == INSTALLED* ]]; then
-                echo "  [!] Patched Mocktail was not installed; AERAM keeps using the Mocktail found above."
+                echo "  [!] Patched Mocktail was not installed; AEAM keeps using the Mocktail found above."
             else
                 echo "  [!] Patched Mocktail was not installed and no other Mocktail was found."
                 echo "      Fix the build or install a Mocktail package, then re-run ./install.sh."
@@ -212,7 +228,7 @@ if [ -f "${SCRIPT_DIR}/native/Makefile" ]; then
             cp "${SCRIPT_DIR}/native/libmocktail_mouse_helper.so" "${HOME}/.local/lib/mocktail/" 2>/dev/null || true
         else
             echo "  [!] Native helper compilation failed (needs SDL3 and OpenGL ES development headers)."
-            echo "      AERAM still works; the chat overlay fix and in-game Anti-AFK pulse are disabled."
+            echo "      AEAM still works; the chat overlay fix and in-game Anti-AFK pulse are disabled."
             print_helper_build_deps
         fi
     else
@@ -223,60 +239,61 @@ fi
 
 # 5. Install CLI launchers and Desktop Entry
 echo "[5/5] Installing desktop integration..."
-chmod +x "${SCRIPT_DIR}/aeram"
+chmod +x "${SCRIPT_DIR}/aeam"
 
 mkdir -p "${BIN_DIR}"
-ln -sf "${SCRIPT_DIR}/aeram" "${BIN_DIR}/aeram"
-ln -sf "${SCRIPT_DIR}/aeram" "${BIN_DIR}/aem"
-rm -f "${BIN_DIR}/ram-linux"  # pre-rename alias
-echo "  * Symlinked ${BIN_DIR}/aeram -> ${SCRIPT_DIR}/aeram"
+ln -sf "${SCRIPT_DIR}/aeam" "${BIN_DIR}/aeam"
+ln -sf "${SCRIPT_DIR}/aeam" "${BIN_DIR}/aem"
+rm -f "${BIN_DIR}/ram-linux" "${BIN_DIR}/aeram"  # pre-rename aliases
+echo "  * Symlinked ${BIN_DIR}/aeam -> ${SCRIPT_DIR}/aeam"
 
 mkdir -p "${DESKTOP_DIR}"
 mkdir -p "${ICON_DIR}"
 mkdir -p "${ICON_512_DIR}"
 
 # Install Scalable Vector Icon
-if [ -f "${SCRIPT_DIR}/assets/aeram.svg" ]; then
-    cp "${SCRIPT_DIR}/assets/aeram.svg" "${ICON_DIR}/aeram.svg"
+if [ -f "${SCRIPT_DIR}/assets/aeam.svg" ]; then
+    cp "${SCRIPT_DIR}/assets/aeam.svg" "${ICON_DIR}/aeam.svg"
 fi
 
 # Install High-Resolution 512x512 Raster Icon
-if [ -f "${SCRIPT_DIR}/assets/aeram.png" ]; then
-    cp "${SCRIPT_DIR}/assets/aeram.png" "${ICON_512_DIR}/aeram.png"
+if [ -f "${SCRIPT_DIR}/assets/aeam.png" ]; then
+    cp "${SCRIPT_DIR}/assets/aeam.png" "${ICON_512_DIR}/aeam.png"
 fi
 
-cat <<DESKTOPEOF > "${DESKTOP_DIR}/aeram.desktop"
+cat <<DESKTOPEOF > "${DESKTOP_DIR}/aeam.desktop"
 [Desktop Entry]
 Type=Application
-Name=AERAM
-GenericName=Roblox Account Manager
+Name=AEAM
+GenericName=Game Account Manager
 Comment=Manage and launch isolated Roblox accounts concurrently on Linux
-Exec=${BIN_DIR}/aeram --gui %u
-Icon=aeram
+Exec=${BIN_DIR}/aeam --gui %u
+Icon=aeam
 Terminal=false
 Categories=Game;
-Keywords=aeram;aem;roblox;ram;account;manager;mocktail;hyprland;kde;
-StartupWMClass=aeram
+Keywords=aeam;aem;roblox;ram;account;manager;mocktail;hyprland;kde;
+StartupWMClass=aeam
 StartupNotify=true
 Actions=StopAll;ListAccounts;Diagnostics;
 
 [Desktop Action StopAll]
 Name=Stop All Running Instances
-Exec=${BIN_DIR}/aeram --stop-all
+Exec=${BIN_DIR}/aeam --stop-all
 
 [Desktop Action ListAccounts]
 Name=List Accounts (Terminal)
-Exec=${BIN_DIR}/aeram --list
+Exec=${BIN_DIR}/aeam --list
 
 [Desktop Action Diagnostics]
 Name=Run System Diagnostics
-Exec=${BIN_DIR}/aeram --diagnostics
+Exec=${BIN_DIR}/aeam --diagnostics
 DESKTOPEOF
 
-chmod 644 "${DESKTOP_DIR}/aeram.desktop"
+chmod 644 "${DESKTOP_DIR}/aeam.desktop"
 # Remove legacy desktop entries if present
-rm -f "${DESKTOP_DIR}/ram-linux.desktop" "${DESKTOP_DIR}/roblox-account-manager.desktop"
-echo "  * Installed ${DESKTOP_DIR}/aeram.desktop"
+rm -f "${DESKTOP_DIR}/ram-linux.desktop" "${DESKTOP_DIR}/roblox-account-manager.desktop" "${DESKTOP_DIR}/aeram.desktop"
+rm -f "${ICON_DIR}/aeram.svg" "${ICON_512_DIR}/aeram.png"
+echo "  * Installed ${DESKTOP_DIR}/aeam.desktop"
 
 if command -v update-desktop-database &> /dev/null; then
     update-desktop-database "${DESKTOP_DIR}" 2>/dev/null || true
@@ -287,8 +304,8 @@ fi
 
 echo ""
 echo "=========================================================="
-echo "  AERAM installed successfully!"
-echo "  - Application Launcher: Search 'AERAM' or 'Roblox Account Manager'"
-echo "  - Terminal Launch:      aeram"
-echo "  - Diagnostic Report:    aeram --diagnostics"
+echo "  AEAM installed successfully!"
+echo "  - Application Launcher: Search 'AEAM' or 'Game Account Manager'"
+echo "  - Terminal Launch:      aeam"
+echo "  - Diagnostic Report:    aeam --diagnostics"
 echo "=========================================================="

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AERAM Self-Healing Watchdog Engine (Auto-Reconnect Farm).
+AEAM Self-Healing Watchdog Engine (Auto-Reconnect Farm).
 Monitors running background alts, detects server disconnects or crashes,
 and automatically rejoins them without interrupting your main game session.
 """
@@ -123,7 +123,7 @@ class SelfHealEngine:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         desc = ROBLOX_ERROR_CODES.get(error_code, "Lost connection to the server")
         with open(log_path, "a", encoding="utf-8") as f:
-            f.write(f"\n[AERAM-TEST] Error Code: {error_code} ({desc})\n")
+            f.write(f"\n[AEAM-TEST] Error Code: {error_code} ({desc})\n")
         return True
 
     def check_and_heal(self) -> int:
@@ -282,7 +282,7 @@ class SelfHealEngine:
                         def _notify(m_title, m_desc):
                             try:
                                 subprocess.run(
-                                    ["notify-send", "-a", "AERAM", "-u", "normal", m_title, m_desc],
+                                    ["notify-send", "-a", "AEAM", "-u", "normal", m_title, m_desc],
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL,
                                     timeout=5,
@@ -291,7 +291,7 @@ class SelfHealEngine:
                                 pass
                         threading.Thread(
                             target=_notify,
-                            args=("AERAM Self-Heal", f"Reconnected @{acc.username} ({target_desc})"),
+                            args=("AEAM Self-Heal", f"Reconnected @{acc.username} ({target_desc})"),
                             daemon=True
                         ).start()
                 except Exception as e:

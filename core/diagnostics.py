@@ -1,5 +1,5 @@
 """
-System Diagnostics and Auto-Repair Engine for AERAM.
+System Diagnostics and Auto-Repair Engine for AEAM.
 Performs capability-based health checks across Python runtime, dependencies,
 Mocktail installations, native helper libraries, desktop compositors (Hyprland/KDE/X11),
 and Linux cgroups/uinput subsystems.
@@ -39,7 +39,7 @@ class DiagnosticReport:
     def to_text(self) -> str:
         lines = [
             "============================================================",
-            "AERAM System Diagnostics & Portability Report",
+            "AEAM System Diagnostics & Portability Report",
             "============================================================",
             f"Overall Status: {'PASSED (Ready)' if self.overall_ok else 'ATTENTION REQUIRED'}",
             f"Summary: {self.summary}",
@@ -241,7 +241,7 @@ class DiagnosticsRunner:
                 status="WARNING",
                 message="Mocktail executable was not found on PATH or standard locations.",
                 details="Searched: PATH, ~/.local/bin/mocktail, ~/.local/lib/mocktail/mocktail, /usr/bin/mocktail, /opt/mocktail/bin/mocktail",
-                fix_suggestion="Install via AUR 'paru -S mocktail-bin' or 'yay -S mocktail-bin', or set path in ~/.config/aeram/config.json",
+                fix_suggestion="Install via AUR 'paru -S mocktail-bin' or 'yay -S mocktail-bin', or set path in ~/.config/aeam/config.json",
             ))
             arch_cmds.append("paru -S --needed mocktail-bin  # or yay -S mocktail-bin")
 
@@ -266,7 +266,7 @@ class DiagnosticsRunner:
                 status="WARNING",
                 message="libmocktail_mouse_helper.so is not compiled.",
                 details="Used for zero-disruption in-process mouse & anti-AFK event injection.",
-                fix_suggestion="Run 'make -C native' in AERAM root, or click 'Auto-Repair' below." if buildable else "Install base-devel ('sudo pacman -S base-devel') then run 'make -C native'",
+                fix_suggestion="Run 'make -C native' in AEAM root, or click 'Auto-Repair' below." if buildable else "Install base-devel ('sudo pacman -S base-devel') then run 'make -C native'",
             ))
             if not buildable:
                 arch_cmds.append("sudo pacman -S --needed base-devel")
@@ -447,11 +447,11 @@ class DiagnosticsRunner:
             log_messages.append("Native helper library already present.")
 
         # 2. Ensure runtime directories exist
-        # Use the directory the app will actually open; hardcoding aeram/ here used to create an
+        # Use the directory the app will actually open; hardcoding aeam/ here used to create an
         # empty directory that then took precedence over an existing ram-linux vault.
         from core.paths import default_base_dir
         app_data = default_base_dir()
-        config_dir = Path.home() / ".config" / "aeram"
+        config_dir = Path.home() / ".config" / "aeam"
         try:
             app_data.mkdir(parents=True, exist_ok=True)
             config_dir.mkdir(parents=True, exist_ok=True)

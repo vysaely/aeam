@@ -22,7 +22,7 @@ log = logging.getLogger("RobloxAPI")
 # roblox.com Origin/Referer. A browser identity that the connection itself
 # contradicts is a classic bot signal.
 BROWSER_TRACKER_URL = "https://apis.roblox.com/browser-tracker-api/device/initialize"
-USER_AGENT = "AERAM/1.0 (Roblox account manager for Linux; +https://github.com/vysaely/aeram)"
+USER_AGENT = "AEAM/1.0 (game account manager for Linux; +https://github.com/vysaely/aeam)"
 
 
 def browser_id_from_tracker(tracker: str) -> Optional[str]:
@@ -70,7 +70,7 @@ class RobloxAPI:
         return None
 
     def _session_cookies(self, clean_cookie: str) -> str:
-        """Cookie header for AERAM's own requests, with one device identity per run."""
+        """Cookie header for AEAM's own requests, with one device identity per run."""
         if self._browser_tracker is None:
             self._browser_tracker = self.initialize_browser_tracker() or ""
         if self._browser_tracker:

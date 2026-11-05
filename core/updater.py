@@ -1,7 +1,7 @@
 """
-Dedicated Application Updater for AERAM.
+Dedicated Application Updater for AEAM.
 Provides safe, background update checks and one-click upgrades directly
-from the official GitHub repository (https://github.com/vysaely/aeram.git).
+from the official GitHub repository (https://github.com/vysaely/aeam.git).
 
 Supports both:
 1. Git checkouts: updates via fast-forward git pull.
@@ -22,8 +22,8 @@ from typing import Optional, Dict, Any, Tuple, Callable
 
 log = logging.getLogger("AppUpdater")
 
-REPO_URL = "https://github.com/vysaely/aeram.git"
-ARCHIVE_URL = "https://github.com/vysaely/aeram/archive/refs/heads/main.zip"
+REPO_URL = "https://github.com/vysaely/aeam.git"
+ARCHIVE_URL = "https://github.com/vysaely/aeam/archive/refs/heads/main.zip"
 
 
 class AppUpdater:
@@ -94,8 +94,8 @@ class AppUpdater:
         if not remote_sha:
             try:
                 req = urllib.request.Request(
-                    "https://api.github.com/repos/vysaely/aeram/commits/main",
-                    headers={"User-Agent": "AERAM-Updater/1.0"},
+                    "https://api.github.com/repos/vysaely/aeam/commits/main",
+                    headers={"User-Agent": "AEAM-Updater/1.0"},
                 )
                 import json
                 with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
@@ -193,7 +193,7 @@ class AppUpdater:
                         err_detail = (pull_res.stderr or pull_res.stdout or "uncommitted local changes").strip()
                         report("Update aborted to preserve local changes.", 100)
                         return False, f"Git fast-forward update declined to preserve local changes: {err_detail}"
-                    backup = f"aeram-backup-{time.strftime('%Y%m%d-%H%M%S')}"
+                    backup = f"aeam-backup-{time.strftime('%Y%m%d-%H%M%S')}"
                     report(f"History changed on GitHub; saving current version as branch {backup}...", 75)
                     subprocess.run(["git", "branch", backup, "HEAD"], cwd=str(self.app_root), check=True, timeout=10)
                     subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=str(self.app_root), check=True, timeout=20)
@@ -238,7 +238,7 @@ class AppUpdater:
 
                 req = urllib.request.Request(
                     ARCHIVE_URL,
-                    headers={"User-Agent": "AERAM-Updater/1.0"},
+                    headers={"User-Agent": "AEAM-Updater/1.0"},
                 )
                 with urllib.request.urlopen(req, timeout=30) as resp, open(zip_path, "wb") as out_f:
                     shutil.copyfileobj(resp, out_f)
@@ -247,13 +247,13 @@ class AppUpdater:
                 with zipfile.ZipFile(zip_path, "r") as zf:
                     zf.extractall(extract_path)
 
-                # Find root extracted directory (usually aeram-main)
+                # Find root extracted directory (usually aeam-main)
                 contents = list(extract_path.iterdir())
                 src_root = contents[0] if len(contents) == 1 and contents[0].is_dir() else extract_path
 
-                # Validate archive integrity: must contain at least core/ or aeram
-                if not ((src_root / "core").exists() or (src_root / "aeram").exists()):
-                    raise ValueError("Downloaded archive lacks valid AERAM package structure.")
+                # Validate archive integrity: must contain at least core/ or aeam
+                if not ((src_root / "core").exists() or (src_root / "aeam").exists()):
+                    raise ValueError("Downloaded archive lacks valid AEAM package structure.")
 
                 report("Merging application files (preserving database & credentials)...", 85)
 

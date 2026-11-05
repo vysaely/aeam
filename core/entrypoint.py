@@ -1,5 +1,5 @@
 """
-Unified application entry point for AERAM (GUI and CLI).
+Unified application entry point for AEAM (GUI and CLI).
 """
 
 import sys
@@ -37,7 +37,7 @@ def _excepthook(exc_type, exc_val, exc_tb):
 sys.excepthook = _excepthook
 
 
-def _set_process_name(name: str = "aeram") -> None:
+def _set_process_name(name: str = "aeam") -> None:
     """Sets the Linux kernel process name (/proc/self/comm) to avoid generic 'python3' labeling."""
     if sys.platform != "linux":
         return
@@ -64,9 +64,9 @@ def main():
         format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
         datefmt="%H:%M:%S",
     )
-    _set_process_name("aeram")
+    _set_process_name("aeam")
 
-    # Normalize natural CLI subcommands (e.g. 'aeram doctor', 'aeram update', 'aeram list')
+    # Normalize natural CLI subcommands (e.g. 'aeam doctor', 'aeam update', 'aeam list')
     raw_args = sys.argv[1:]
     if raw_args:
         cmd0 = raw_args[0].lower()
@@ -91,8 +91,8 @@ def main():
             raw_args = [subcmd_map[cmd0]] + raw_args[1:]
 
     parser = argparse.ArgumentParser(
-        prog="aeram",
-        description="AERAM — Roblox Account Manager"
+        prog="aeam",
+        description="AEAM — Game Account Manager"
     )
     parser.add_argument("--gui", action="store_true", help="Launch PyQt6 graphical desktop interface (default)")
     parser.add_argument("--list", action="store_true", help="List all accounts and status in terminal")
@@ -127,7 +127,7 @@ def main():
 
     if orphan_errors:
         for err in orphan_errors:
-            print(f"aeram: error: {err}", file=sys.stderr)
+            print(f"aeam: error: {err}", file=sys.stderr)
         sys.exit(2)
 
     if args.diagnostics:
@@ -145,7 +145,7 @@ def main():
             print(f"[ERROR] Could not check remote repository: {res.get('error', 'Network error')}")
             sys.exit(1)
         if not res.get("update_available"):
-            print(f"[OK] AERAM is already up to date ({res.get('local_sha', '')[:7]}).")
+            print(f"[OK] AEAM is already up to date ({res.get('local_sha', '')[:7]}).")
             sys.exit(0)
         print(f"[UPDATE AVAILABLE] Remote commit: {res.get('remote_sha')[:7]}")
         if res.get("behind_count", 0) > 0:
@@ -199,16 +199,19 @@ def main():
 
     # Set canonical application metadata across Wayland, X11, and desktop environments
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName("aeram")
-    app.setOrganizationName("aeram")
-    app.setApplicationDisplayName("AERAM")
-    app.setDesktopFileName("aeram")
+    app.setApplicationName("aeam")
+    app.setOrganizationName("aeam")
+    app.setApplicationDisplayName("AEAM")
+    app.setDesktopFileName("aeam")
+    # the system's colours, live (ui/system_colors.py); before any window or style sheet
+    from ui import system_colors
+    system_colors.install()
     app.setStyleSheet(DARK_THEME_QSS)
 
     # Set window icon (check system theme first, fallback to bundled assets)
-    app_icon = QtGui.QIcon.fromTheme("aeram")
+    app_icon = QtGui.QIcon.fromTheme("aeam")
     if app_icon.isNull():
-        for icon_name in ("aeram.svg", "aeram.png"):
+        for icon_name in ("aeam.svg", "aeam.png"):
             icon_path = PROJECT_ROOT / "assets" / icon_name
             if icon_path.exists():
                 app_icon = QtGui.QIcon(str(icon_path))
@@ -218,7 +221,7 @@ def main():
         app.setWindowIcon(app_icon)
 
     window = MainWindow(storage, api, runner)
-    window.setObjectName("aeram")
+    window.setObjectName("aeam")
     if not app_icon.isNull():
         window.setWindowIcon(app_icon)
 

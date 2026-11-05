@@ -1,6 +1,6 @@
 """
-Encrypted account archive migration engine for AERAM.
-Allows secure, password-protected export and import of AERAM vaults and Windows RAM archives.
+Encrypted account archive migration engine for AEAM.
+Allows secure, password-protected export and import of AEAM vaults and Windows RAM archives.
 Uses Argon2id KDF and XSalsa20-Poly1305 authenticated encryption (libsodium / PyNaCl).
 Zero plaintext token leakage; master export passwords are never persisted.
 """
@@ -22,12 +22,21 @@ from .vault import (
     VaultCorruptError,
 )
 
-AERAM_EXPORT_MAGIC = b"AERAM_VAULT_EXPORT_V1\n"
+AEAM_EXPORT_MAGIC = b"AEAM_VAULT_EXPORT_V1\n"
+# Exports made before the AERAM -> AEAM rename (2026-11-06): same layout, older header.
+LEGACY_EXPORT_MAGICS = (b"AERAM_VAULT_EXPORT_V1\n",)
 
 
-def is_aeram_export(data: bytes) -> bool:
-    """Returns True if the byte payload begins with the AERAM export magic header."""
-    return data.startswith(AERAM_EXPORT_MAGIC)
+def _export_magic(data: bytes) -> bytes | None:
+    for magic in (AEAM_EXPORT_MAGIC, *LEGACY_EXPORT_MAGICS):
+        if data.startswith(magic):
+            return magic
+    return None
+
+
+def is_aeam_export(data: bytes) -> bool:
+    """Returns True if the byte payload begins with an AEAM (or older AERAM) export header."""
+    return _export_magic(data) is not None
 
 
 def export_accounts_encrypted(
@@ -75,7 +84,7 @@ def export_accounts_encrypted(
 
     encrypted_blob = secretbox_encrypt(derived_key, raw_json)
     # File layout: MAGIC + SALT (16 bytes) + ENCRYPTED_BLOB (nonce 24 bytes + ciphertext)
-    archive_bytes = AERAM_EXPORT_MAGIC + salt + encrypted_blob
+    archive_bytes = AEAM_EXPORT_MAGIC + salt + encrypted_blob
 
     output_path = Path(output_path)
     tmp_path = output_path.with_suffix(".tmp")
@@ -88,15 +97,15 @@ def export_accounts_encrypted(
     return output_path
 
 
-def decrypt_aeram_export(data: bytes, password: str) -> List[Dict[str, Any]]:
+def decrypt_aeam_export(data: bytes, password: str) -> List[Dict[str, Any]]:
     """
-    Decrypts an AERAM encrypted export archive using the master password.
+    Decrypts an AEAM encrypted export archive using the master password.
     Returns the parsed list of account attribute dictionaries.
     """
-    if not is_aeram_export(data):
-        raise ValueError("File is not a valid AERAM encrypted export archive.")
+    if not is_aeam_export(data):
+        raise ValueError("File is not a valid AEAM encrypted export archive.")
 
-    header_len = len(AERAM_EXPORT_MAGIC)
+    header_len = len(_export_magic(data))
     salt_end = header_len + crypto_pwhash_SALTBYTES
     if len(data) <= salt_end + crypto_secretbox_NONCEBYTES:
         raise VaultCorruptError("Encrypted export archive is truncated or corrupt.")
