@@ -1,26 +1,3 @@
-diff --git a/src/libc_shim/libc_shim.cc b/src/libc_shim/libc_shim.cc
---- a/src/libc_shim/libc_shim.cc
-+++ b/src/libc_shim/libc_shim.cc
-@@ -285,6 +285,19 @@
-       RegisterPathMapping("content", content_root);
-       RegisterPathMapping("rbx_bin/assets/content", content_root);
-       RegisterPathMapping("rbx_bin/assets", assets_root);
-+      // AEAM: newer Roblox (2.742+) no longer ships the shift-lock icon and
-+      // looks for it on disk before asking the asset manager, so the
-+      // MOCKTAIL_SHIFTLOCK_CURSOR override was never asked for. Map the file
-+      // itself to the override so the lookup finds it.
-+      const char* shiftlock = GetEnvNonEmpty("MOCKTAIL_SHIFTLOCK_CURSOR");
-+      if (shiftlock != nullptr) {
-+        const std::string icon = "/textures/MouseLockedCursor.png";
-+        RegisterPathMapping("content" + icon, shiftlock);
-+        RegisterPathMapping("rbx_bin/assets/content" + icon, shiftlock);
-+        RegisterPathMapping(content_root + icon, shiftlock);
-+        std::cout << "  [libc_shim] shift-lock cursor mapped to " << shiftlock
-+                  << '\n';
-+      }
-     }
-   }
-   RegisterPathMapping("/sdcard/Android/data/com.roblox.client",
 diff --git a/src/window/window.cc b/src/window/window.cc
 --- a/src/window/window.cc
 +++ b/src/window/window.cc
@@ -52,3 +29,18 @@ diff --git a/src/window/window_pointer_capture_owner.cc b/src/window/window_poin
    return Apply(capture_requested, cursor_visible);
  }
  
+diff --git a/stubs/libandroid_stub.cc b/stubs/libandroid_stub.cc
+--- a/stubs/libandroid_stub.cc
++++ b/stubs/libandroid_stub.cc
+@@ -381,6 +381,11 @@
+   }
+   std::string path = ResolveAssetPath(filename);
+   if (path.empty()) {
++    // AEAM: with MOCKTAIL_ASSET_TRACE, say what Roblox asked for and did not get, so a texture that
++    // newer clients no longer ship (the shift-lock icon on 2.742) shows how it is asked for
++    if (AssetTraceEnabled() && filename != nullptr) {
++      std::fprintf(stderr, "  [asset] not found: %s\n", filename);
++    }
+     return nullptr;
+   }
+   auto* asset = new AAsset;
