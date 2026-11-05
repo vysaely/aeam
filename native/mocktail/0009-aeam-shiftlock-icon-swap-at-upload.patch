@@ -1,0 +1,274 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -573,6 +573,7 @@
+ 
+ add_library(mocktail_legacy_runtime STATIC
+   src/legacy/legacy_runtime.cc
++  src/legacy/aeam_texture_swap.cc
+   src/runtime/roblox_text_input_jni_bridge.cc
+ )
+ target_include_directories(mocktail_legacy_runtime PRIVATE include src)
+@@ -584,6 +585,7 @@
+   )
+ endif()
+ target_link_libraries(mocktail_legacy_runtime PRIVATE
++  SDL3::SDL3
+   mocktail_legacy_jnivm
+   mocktail_compat
+   mocktail_runtime
+diff --git a/src/legacy/aeam_texture_swap.cc b/src/legacy/aeam_texture_swap.cc
+new file mode 100644
+--- /dev/null
++++ b/src/legacy/aeam_texture_swap.cc
+@@ -0,0 +1,203 @@
++// AEAM: swaps one picture Roblox uploads to the GPU for another, at the upload.
++//
++// Roblox 2.742 no longer ships its shift-lock icon (textures/MouseLockedCursor.png): it downloads it into its
++// checksummed rbx-storage cache, so neither the asset hook (0003) nor the cache can carry a custom one. The
++// pixels still reach OpenGL through glTexImage2D / glTexSubImage2D, which Mocktail hands to Roblox, so the
++// icon is recognised there (compared with MOCKTAIL_SHIFTLOCK_ORIGINAL, straight or premultiplied alpha, with a
++// small tolerance) and MOCKTAIL_SHIFTLOCK_CURSOR is uploaded in its place, with its smaller mip levels.
++// Roblox then draws the custom icon itself, where and when it draws its own.
++//
++// MOCKTAIL_TEX_TRACE=1 logs small RGBA uploads (size, level, format, whether they matched).
++
++#include "legacy/aeam_texture_swap.h"
++
++#include <SDL3/SDL.h>
++
++#include <algorithm>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <mutex>
++#include <unordered_map>
++#include <vector>
++
++namespace aeam_texture_swap {
++namespace {
++
++using GLenum = unsigned int;
++using GLint = int;
++using GLsizei = int;
++using TexImage2DFn = void (*)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*);
++using TexSubImage2DFn = void (*)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, const void*);
++using GetIntegervFn = void (*)(GLenum, GLint*);
++
++constexpr GLenum kTexture2D = 0x0DE1;
++constexpr GLenum kRgba = 0x1908;
++constexpr GLenum kUnsignedByte = 0x1401;
++constexpr GLenum kTextureBinding2D = 0x8069;
++constexpr int kTolerance = 12;
++constexpr int kMaxTrace = 400;
++
++TexImage2DFn g_real_tex_image = nullptr;
++TexSubImage2DFn g_real_tex_sub_image = nullptr;
++GetIntegervFn g_real_get_integerv = nullptr;
++
++int g_size = 0;                       // side of the original icon (square)
++std::vector<uint8_t> g_original;      // RGBA, straight alpha
++std::vector<uint8_t> g_original_pm;   // RGBA, premultiplied
++// replacement mip chain (level 0 = g_size), straight and premultiplied
++std::vector<std::vector<uint8_t>> g_levels;
++std::vector<std::vector<uint8_t>> g_levels_pm;
++bool g_trace = false;
++int g_traced = 0;
++
++std::mutex g_mutex;
++std::unordered_map<GLint, bool> g_swapped;  // texture name -> premultiplied
++
++bool LoadRgba(const char* path, int* w, int* h, std::vector<uint8_t>* out) {
++  SDL_Surface* loaded = SDL_LoadPNG(path);
++  if (loaded == nullptr) {
++    std::fprintf(stderr, "  [aeam-tex] %s unreadable: %s\n", path, SDL_GetError());
++    return false;
++  }
++  SDL_Surface* rgba = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);  // bytes R,G,B,A
++  SDL_DestroySurface(loaded);
++  if (rgba == nullptr) {
++    return false;
++  }
++  *w = rgba->w;
++  *h = rgba->h;
++  out->resize(static_cast<size_t>(rgba->w) * rgba->h * 4);
++  for (int y = 0; y < rgba->h; ++y) {
++    const auto* row = static_cast<const uint8_t*>(rgba->pixels) + static_cast<size_t>(y) * rgba->pitch;
++    std::copy(row, row + rgba->w * 4, out->data() + static_cast<size_t>(y) * rgba->w * 4);
++  }
++  SDL_DestroySurface(rgba);
++  return true;
++}
++
++// box-filter (or nearest, when growing) `src` (sw x sh) to n x n
++std::vector<uint8_t> Resize(const std::vector<uint8_t>& src, int sw, int sh, int n) {
++  std::vector<uint8_t> out(static_cast<size_t>(n) * n * 4);
++  for (int y = 0; y < n; ++y) {
++    for (int x = 0; x < n; ++x) {
++      const int x0 = x * sw / n, x1 = std::max(x0 + 1, (x + 1) * sw / n);
++      const int y0 = y * sh / n, y1 = std::max(y0 + 1, (y + 1) * sh / n);
++      unsigned sum[4] = {0, 0, 0, 0};
++      for (int yy = y0; yy < y1; ++yy) {
++        for (int xx = x0; xx < x1; ++xx) {
++          for (int c = 0; c < 4; ++c) sum[c] += src[(static_cast<size_t>(yy) * sw + xx) * 4 + c];
++        }
++      }
++      const unsigned count = static_cast<unsigned>((x1 - x0) * (y1 - y0));
++      for (int c = 0; c < 4; ++c) out[(static_cast<size_t>(y) * n + x) * 4 + c] = static_cast<uint8_t>(sum[c] / count);
++    }
++  }
++  return out;
++}
++
++std::vector<uint8_t> Premultiply(const std::vector<uint8_t>& px) {
++  std::vector<uint8_t> out(px);
++  for (size_t i = 0; i < out.size(); i += 4) {
++    const unsigned a = out[i + 3];
++    for (int c = 0; c < 3; ++c) out[i + c] = static_cast<uint8_t>((out[i + c] * a + 127) / 255);
++  }
++  return out;
++}
++
++bool Close(const uint8_t* a, const std::vector<uint8_t>& b) {
++  for (size_t i = 0; i < b.size(); ++i) {
++    if (std::abs(static_cast<int>(a[i]) - static_cast<int>(b[i])) > kTolerance) return false;
++  }
++  return true;
++}
++
++GLint BoundTexture() {
++  GLint name = 0;
++  if (g_real_get_integerv != nullptr) g_real_get_integerv(kTextureBinding2D, &name);
++  return name;
++}
++
++// The pixels to upload instead of `data` (w x h at `level`, the whole level), or nullptr.
++const void* Replacement(GLenum target, GLint level, GLsizei w, GLsizei h, GLenum format, GLenum type,
++                        const void* data) {
++  if (data == nullptr || target != kTexture2D || format != kRgba || type != kUnsignedByte) {
++    return nullptr;
++  }
++  const bool small = w <= 128 && h <= 128;
++  if (level == 0 && w == g_size && h == g_size) {
++    const auto* px = static_cast<const uint8_t*>(data);
++    int pm = -1;
++    if (Close(px, g_original)) pm = 0;
++    else if (Close(px, g_original_pm)) pm = 1;
++    if (g_trace && g_traced < kMaxTrace) {
++      ++g_traced;
++      std::fprintf(stderr, "  [aeam-tex] %dx%d level 0 upload: %s\n", w, h,
++                   pm < 0 ? "other" : pm == 1 ? "shift-lock icon (premultiplied), swapped" : "shift-lock icon, swapped");
++    }
++    if (pm < 0) return nullptr;
++    const GLint tex = BoundTexture();
++    std::lock_guard<std::mutex> lock(g_mutex);
++    g_swapped[tex] = pm == 1;
++    return pm == 1 ? g_levels_pm[0].data() : g_levels[0].data();
++  }
++  if (level > 0 && w == h && static_cast<size_t>(level) < g_levels.size() && w == std::max(1, g_size >> level)) {
++    const GLint tex = BoundTexture();
++    std::lock_guard<std::mutex> lock(g_mutex);
++    auto it = g_swapped.find(tex);
++    if (it != g_swapped.end()) {
++      return it->second ? g_levels_pm[level].data() : g_levels[level].data();
++    }
++  } else if (g_trace && small && g_traced < kMaxTrace) {
++    ++g_traced;
++    std::fprintf(stderr, "  [aeam-tex] %dx%d level %d upload\n", w, h, level);
++  }
++  return nullptr;
++}
++
++void TexImage2D(GLenum target, GLint level, GLint internal_format, GLsizei w, GLsizei h, GLint border, GLenum format,
++                GLenum type, const void* data) {
++  const void* swap = Replacement(target, level, w, h, format, type, data);
++  g_real_tex_image(target, level, internal_format, w, h, border, format, type, swap != nullptr ? swap : data);
++}
++
++void TexSubImage2D(GLenum target, GLint level, GLint x, GLint y, GLsizei w, GLsizei h, GLenum format, GLenum type,
++                   const void* data) {
++  const void* swap = (x == 0 && y == 0) ? Replacement(target, level, w, h, format, type, data) : nullptr;
++  g_real_tex_sub_image(target, level, x, y, w, h, format, type, swap != nullptr ? swap : data);
++}
++
++}  // namespace
++
++bool Install(void* real_tex_image, void* real_tex_sub_image, void* real_get_integerv, void** tex_image,
++             void** tex_sub_image) {
++  const char* custom = std::getenv("MOCKTAIL_SHIFTLOCK_CURSOR");
++  const char* original = std::getenv("MOCKTAIL_SHIFTLOCK_ORIGINAL");
++  const char* trace = std::getenv("MOCKTAIL_TEX_TRACE");
++  g_trace = trace != nullptr && trace[0] != '\0' && trace[0] != '0';
++  if (custom == nullptr || original == nullptr || custom[0] == '\0' || original[0] == '\0' ||
++      real_tex_image == nullptr || real_tex_sub_image == nullptr) {
++    return false;
++  }
++  int ow = 0, oh = 0, cw = 0, ch = 0;
++  std::vector<uint8_t> custom_px;
++  if (!LoadRgba(original, &ow, &oh, &g_original) || ow != oh || !LoadRgba(custom, &cw, &ch, &custom_px)) {
++    return false;
++  }
++  g_size = ow;
++  g_original_pm = Premultiply(g_original);
++  for (int n = g_size; ; n /= 2) {
++    g_levels.push_back(Resize(custom_px, cw, ch, n));
++    g_levels_pm.push_back(Premultiply(g_levels.back()));
++    if (n == 1) break;
++  }
++  g_real_tex_image = reinterpret_cast<TexImage2DFn>(real_tex_image);
++  g_real_tex_sub_image = reinterpret_cast<TexSubImage2DFn>(real_tex_sub_image);
++  g_real_get_integerv = reinterpret_cast<GetIntegervFn>(real_get_integerv);
++  *tex_image = reinterpret_cast<void*>(&TexImage2D);
++  *tex_sub_image = reinterpret_cast<void*>(&TexSubImage2D);
++  std::fprintf(stderr, "  [aeam-tex] shift-lock icon swap armed (%dx%d, from %s)\n", g_size, g_size, custom);
++  return true;
++}
++
++}  // namespace aeam_texture_swap
+diff --git a/src/legacy/aeam_texture_swap.h b/src/legacy/aeam_texture_swap.h
+new file mode 100644
+--- /dev/null
++++ b/src/legacy/aeam_texture_swap.h
+@@ -0,0 +1,11 @@
++// AEAM: swaps Roblox's shift-lock icon for a custom one as it is uploaded to the GPU (aeam_texture_swap.cc).
++#pragma once
++
++namespace aeam_texture_swap {
++
++// With MOCKTAIL_SHIFTLOCK_CURSOR and MOCKTAIL_SHIFTLOCK_ORIGINAL set and readable, arms the swap and returns the
++// wrappers to register in place of glTexImage2D and glTexSubImage2D; false leaves Roblox's own functions.
++bool Install(void* real_tex_image, void* real_tex_sub_image, void* real_get_integerv, void** tex_image,
++             void** tex_sub_image);
++
++}  // namespace aeam_texture_swap
+diff --git a/src/legacy/legacy_runtime.cc b/src/legacy/legacy_runtime.cc
+--- a/src/legacy/legacy_runtime.cc
++++ b/src/legacy/legacy_runtime.cc
+@@ -46,6 +46,7 @@
+ #include <SDL3/SDL_video.h>
+ 
+ #include "compat/bionic_abi_exports.h"
++#include "legacy/aeam_texture_swap.h"
+ #include "compat/bionic_prctl_runtime.h"
+ #include "compat/bionic_pthread_create_runtime.h"
+ #include "compat/bionic_socket_runtime.h"
+@@ -5692,6 +5693,19 @@
+       ++registered;
+     }
+   }
++  {
++    // AEAM: the custom shift-lock icon, swapped in as Roblox uploads its own
++    void* tex_image = nullptr;
++    void* tex_sub_image = nullptr;
++    const auto resolve = [&](const char* name) {
++      return ResolveSymbolForBionic(name, has_window, real_gles_handle, stub_handles).address;
++    };
++    if (aeam_texture_swap::Install(resolve("glTexImage2D"), resolve("glTexSubImage2D"),
++                                   resolve("glGetIntegerv"), &tex_image, &tex_sub_image)) {
++      linker::RegisterSymbol("glTexImage2D", tex_image);
++      linker::RegisterSymbol("glTexSubImage2D", tex_sub_image);
++    }
++  }
+   if (bionic_vulkan_adapter_handle != nullptr) {
+     static constexpr const char* kVulkanAdapterExports[] = {
+         "vkCreateAndroidSurfaceKHR",

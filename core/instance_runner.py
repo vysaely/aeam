@@ -507,6 +507,11 @@ class InstanceRunner:
         if isinstance(shiftlock_cursor, str) and shiftlock_cursor.strip() and os.path.isfile(shiftlock_cursor.strip()):
             shiftlock_cursor = shiftlock_cursor.strip()
             env["MOCKTAIL_SHIFTLOCK_CURSOR"] = shiftlock_cursor
+            # Roblox 2.742+ downloads its icon; Mocktail (patch 0009) recognises it by this picture as it
+            # reaches the GPU and uploads the custom one instead
+            reference = Path(shiftlock_cursor).parent / ".roblox_lock_reference.png"
+            if reference.is_file():
+                env["MOCKTAIL_SHIFTLOCK_ORIGINAL"] = str(reference)
         env["vblank_mode"] = "0"
         env["MOCKTAIL_FRAME_RATE_LIMIT"] = str(limit_fps)
         env["MOCKTAIL_VSYNC"] = "off"
